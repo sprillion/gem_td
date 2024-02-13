@@ -2,6 +2,7 @@
 {
     public interface ILevelBuilder
     {
+        MapData MapData { get; }
         void Build();
     }
 }

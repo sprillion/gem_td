@@ -1,4 +1,5 @@
 ﻿using infrastructure.factories.blocks;
+using infrastructure.services.inputService;
 using infrastructure.services.resourceProvider;
 using UnityEngine;
 
@@ -10,14 +11,18 @@ namespace level.builder
         
         private readonly IResourceProvider _resourceProvider;
         private readonly IBlockFactory _blockFactory;
+        private readonly IInputService _inputService;
         private MapData _mapData;
 
-        public LevelBuilder(IResourceProvider resourceProvider, IBlockFactory blockFactory)
+        public MapData MapData => _mapData;
+        
+        public LevelBuilder(IResourceProvider resourceProvider, IBlockFactory blockFactory, IInputService inputService)
         {
             _resourceProvider = resourceProvider;
             _blockFactory = blockFactory;
+            _inputService = inputService;
             Load();
-            Build();
+            _inputService.OnSpacePressed += Build;
         }
         
         public void Build()

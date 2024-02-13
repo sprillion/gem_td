@@ -28,9 +28,18 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             ""id"": ""9cde90b2-56b6-495f-b8a4-9bbd1382cbf2"",
             ""actions"": [
                 {
-                    ""name"": ""MouseClick"",
+                    ""name"": ""MouseLeftClick"",
                     ""type"": ""Button"",
                     ""id"": ""9ef9beb7-5427-4df2-8020-90ae5a471dd8"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Space"",
+                    ""type"": ""Button"",
+                    ""id"": ""ddee2382-326e-4c07-ae80-f422c73b5655"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -45,7 +54,18 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard and mouse"",
-                    ""action"": ""MouseClick"",
+                    ""action"": ""MouseLeftClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""92ba53de-3063-4ac7-aae9-bdf97604c404"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Space"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -73,7 +93,8 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
 }");
         // Map
         m_Map = asset.FindActionMap("Map", throwIfNotFound: true);
-        m_Map_MouseClick = m_Map.FindAction("MouseClick", throwIfNotFound: true);
+        m_Map_MouseLeftClick = m_Map.FindAction("MouseLeftClick", throwIfNotFound: true);
+        m_Map_Space = m_Map.FindAction("Space", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -135,12 +156,14 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     // Map
     private readonly InputActionMap m_Map;
     private List<IMapActions> m_MapActionsCallbackInterfaces = new List<IMapActions>();
-    private readonly InputAction m_Map_MouseClick;
+    private readonly InputAction m_Map_MouseLeftClick;
+    private readonly InputAction m_Map_Space;
     public struct MapActions
     {
         private @InputActions m_Wrapper;
         public MapActions(@InputActions wrapper) { m_Wrapper = wrapper; }
-        public InputAction @MouseClick => m_Wrapper.m_Map_MouseClick;
+        public InputAction @MouseLeftClick => m_Wrapper.m_Map_MouseLeftClick;
+        public InputAction @Space => m_Wrapper.m_Map_Space;
         public InputActionMap Get() { return m_Wrapper.m_Map; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -150,16 +173,22 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_MapActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_MapActionsCallbackInterfaces.Add(instance);
-            @MouseClick.started += instance.OnMouseClick;
-            @MouseClick.performed += instance.OnMouseClick;
-            @MouseClick.canceled += instance.OnMouseClick;
+            @MouseLeftClick.started += instance.OnMouseLeftClick;
+            @MouseLeftClick.performed += instance.OnMouseLeftClick;
+            @MouseLeftClick.canceled += instance.OnMouseLeftClick;
+            @Space.started += instance.OnSpace;
+            @Space.performed += instance.OnSpace;
+            @Space.canceled += instance.OnSpace;
         }
 
         private void UnregisterCallbacks(IMapActions instance)
         {
-            @MouseClick.started -= instance.OnMouseClick;
-            @MouseClick.performed -= instance.OnMouseClick;
-            @MouseClick.canceled -= instance.OnMouseClick;
+            @MouseLeftClick.started -= instance.OnMouseLeftClick;
+            @MouseLeftClick.performed -= instance.OnMouseLeftClick;
+            @MouseLeftClick.canceled -= instance.OnMouseLeftClick;
+            @Space.started -= instance.OnSpace;
+            @Space.performed -= instance.OnSpace;
+            @Space.canceled -= instance.OnSpace;
         }
 
         public void RemoveCallbacks(IMapActions instance)
@@ -188,6 +217,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     }
     public interface IMapActions
     {
-        void OnMouseClick(InputAction.CallbackContext context);
+        void OnMouseLeftClick(InputAction.CallbackContext context);
+        void OnSpace(InputAction.CallbackContext context);
     }
 }
