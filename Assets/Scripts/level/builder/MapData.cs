@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using infrastructure.factories.blocks;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
@@ -24,6 +25,8 @@ namespace level.builder
             ResizableColumns = false, SquareCells = true)]
         public BlockType[,] BlocksMap = new BlockType[1, 1];
 
+        public List<Vector2> Points = new List<Vector2>();
+
 
 
         [Button]
@@ -35,6 +38,20 @@ namespace level.builder
                 for (int j = 0; j < Height; j++)
                 {
                     BlocksMap[i, j] = (i + j % 2) % 2 == 0 ? BlockType.Light : BlockType.Dark;
+                }
+            }
+        }
+
+        [Button]
+        private void SetListPoints()
+        {
+            Points.Clear();
+            for (int i = 0; i < Width; i++)
+            {
+                for (int j = 0; j < Height; j++)
+                {
+                    if (BlocksMap[i, j] != BlockType.Point) continue;
+                    Points.Add(new Vector2(i, j));
                 }
             }
         }

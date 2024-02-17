@@ -1,8 +1,10 @@
 ﻿using infrastructure.factories.blocks;
 using infrastructure.factories.towers;
 using infrastructure.services.inputService;
+using infrastructure.services.pathService;
 using infrastructure.services.towerService;
 using level.builder;
+using level.path;
 using Zenject;
 
 namespace infrastructure.installers
@@ -17,6 +19,18 @@ namespace infrastructure.installers
             BindBlockFactory();
             BindLevelBuilder();
             BindInputActions();
+            BindPathService();
+            BindPathDrawer();
+        }
+
+        private void BindPathDrawer()
+        {
+            Container.Bind<IPathDrawer>().To<PathDrawer>().AsSingle().NonLazy();
+        }
+
+        private void BindPathService()
+        {
+            Container.Bind<IPathService>().To<PathService>().AsSingle().NonLazy();
         }
 
         private void BindTowerService()

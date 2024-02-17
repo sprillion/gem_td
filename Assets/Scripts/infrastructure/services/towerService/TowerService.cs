@@ -14,6 +14,8 @@ namespace infrastructure.services.towerService
         private readonly ILevelBuilder _levelBuilder;
 
         private TowerType[,] _towerMap;
+
+        public TowerType[,] TowerMap => _towerMap;
         
         public TowerService(ITowerFactory towerFactory, ILevelBuilder levelBuilder)
         {

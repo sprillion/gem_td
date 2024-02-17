@@ -403,3 +403,9 @@ MonoBehaviour:
   Height: 11
   BlockSize: 2
   _currentBlock: 5
+  Points:
+  - {x: 1, y: 5}
+  - {x: 9, y: 5}
+  - {x: 9, y: 1}
+  - {x: 5, y: 1}
+  - {x: 5, y: 9}
