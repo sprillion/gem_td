@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using infrastructure.factories.blocks;
 using infrastructure.services.towerService;
 using level.builder;
+using Sirenix.Utilities;
+using UnityEngine;
 
 namespace infrastructure.services.pathService
 {
@@ -10,17 +12,22 @@ namespace infrastructure.services.pathService
     {
         private readonly ILevelBuilder _levelBuilder;
         private readonly ITowerService _towerService;
-        private readonly List<AStarNode> _openList = new List<AStarNode>();
-        private readonly List<AStarNode> _closedList = new List<AStarNode>();
-        
-        // private readonly Dictionary<AStarNode, bool> _openList = new Dictionary<AStarNode, bool>();
-        // private readonly Dictionary<AStarNode, bool> _closedList = new Dictionary<AStarNode, bool>();
+        private readonly Dictionary<Vector2Int, float> _gMap = new Dictionary<Vector2Int, float>();
+        private readonly Dictionary<Vector2Int, float> _hMap = new Dictionary<Vector2Int, float>();
+        private readonly Dictionary<Vector2Int, Vector2Int> _parentMap = new Dictionary<Vector2Int, Vector2Int>();
+        private readonly HashSet<Vector2Int> _closedList = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> _openList = new HashSet<Vector2Int>();
 
-        private AStarNode _startNode;
-        private AStarNode _endNode;
+        private readonly Func<Vector2Int, Vector2Int, float> _heuristic = (nodeA, nodeB) => 
+            Math.Abs(nodeA.x - nodeB.x) + Math.Abs(nodeA.y - nodeB.y);
 
         private readonly int _mapWidth;
         private readonly int _mapHeight;
+
+        private Vector2Int _startNode;
+        private Vector2Int _endNode;
+
+        public List<Vector2Int> CurrentPath { get; private set; } = new List<Vector2Int>();
 
         public PathService(ILevelBuilder levelBuilder, ITowerService towerService)
         {
@@ -31,68 +38,70 @@ namespace infrastructure.services.pathService
             SetStartAndEndNodes();
         }
 
-        public List<AStarNode> FindPath()
+        public List<Vector2Int> FindPath()
         {
-            _openList.Clear();
-            _closedList.Clear();
+            var points = _levelBuilder.MapData.Points;
+            var newPath = new List<Vector2Int>();
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                var path = FindPath(points[i], points[i + 1]);
+                if (path == null) return null;
+                newPath.AddRange(path);
+            }
+            CurrentPath = newPath;
+            return CurrentPath;
+        }
 
-            _openList.Add(_startNode);
+        private List<Vector2Int> FindPath(Vector2Int startNode, Vector2Int endNode)
+        {
+            Clear();
+            
+            _openList.Add(startNode);
 
             while (_openList.Count > 0)
             {
-                var currentNode = GetLowestCostNode(_openList);
-                _openList.Remove(currentNode);
-                _closedList.Add(currentNode);
-
-                if (currentNode.X == _endNode.X && currentNode.Y == _endNode.Y)
+                var currentNode = GetBestNode();
+                if (currentNode.x == endNode.x && currentNode.y == endNode.y)
                 {
                     return GeneratePath(currentNode);
                 }
+                
+                _openList.Remove(currentNode);
+                _closedList.Add(currentNode);
 
                 var neighbors = GetNeighbors(currentNode);
 
+                _closedList.ForEach(node => neighbors.Remove(node));
+                
                 foreach (var neighbor in neighbors)
                 {
-                    if (_closedList.Contains(neighbor)) // Проверка, является ли узел непроходимым
-                        continue;
-                    
-                    var tentativeGScore = currentNode.G + GetDistance(currentNode, neighbor);
+                    var distance = GetDistance(currentNode, neighbor);
+                    var tentativeGScore = GetValueFromDictionary(_gMap, currentNode) + distance;
 
-                    if (!_openList.Contains(neighbor) || tentativeGScore < neighbor.G)
+                    if (!_openList.Contains(neighbor) || tentativeGScore < GetValueFromDictionary(_gMap, currentNode))
                     {
-                        neighbor.Parent = currentNode;
-                        neighbor.G = tentativeGScore;
-                        neighbor.H = Heuristic(neighbor, _endNode);
-
-                        if (!_openList.Contains(neighbor))
-                            _openList.Add(neighbor);
+                        _parentMap[neighbor] = currentNode;
+                        _gMap[neighbor] = tentativeGScore;
+                        _hMap[neighbor] = _heuristic(neighbor, endNode);
+                        _openList.Add(neighbor);
                     }
                 }
             }
-
-            return null; // Путь не найден
+            return null;
         }
 
-        private AStarNode GetLowestCostNode(List<AStarNode> nodeList)
+        private void Clear()
         {
-            var lowestCost = double.MaxValue;
-            AStarNode lowestCostNode = null;
-
-            foreach (var node in nodeList)
-            {
-                if (node.F < lowestCost)
-                {
-                    lowestCost = node.F;
-                    lowestCostNode = node;
-                }
-            }
-
-            return lowestCostNode;
+            _openList.Clear();
+            _closedList.Clear();
+            _hMap.Clear();
+            _gMap.Clear();
+            _parentMap.Clear();
         }
 
-        private List<AStarNode> GetNeighbors(AStarNode node)
+        private List<Vector2Int> GetNeighbors(Vector2Int node)
         {
-            var neighbors = new List<AStarNode>();
+            var neighbors = new List<Vector2Int>();
 
             for (int x = -1; x <= 1; x++)
             {
@@ -101,8 +110,8 @@ namespace infrastructure.services.pathService
                     if (x == 0 && y == 0)
                         continue;
 
-                    var neighborX = node.X + x;
-                    var neighborY = node.Y + y;
+                    var neighborX = node.x + x;
+                    var neighborY = node.y + y;
 
                     if (neighborX < 0 || neighborX >= _mapWidth || neighborY < 0 || neighborY >= _mapHeight)
                         continue;
@@ -113,117 +122,88 @@ namespace infrastructure.services.pathService
                                         
                     if (Math.Abs(x) == Math.Abs(y))
                     {
-                        if ((int)_towerService.TowerMap[neighborX, node.Y] > 0 && 
-                            (int)_towerService.TowerMap[node.X, neighborY] > 0)
+                        if ((int)_towerService.TowerMap[neighborX, node.y] > 0 && 
+                            (int)_towerService.TowerMap[node.x, neighborY] > 0)
                         {
                             continue;
                         }
                     }
                     
-                    neighbors.Add(new AStarNode(neighborX, neighborY));
+                    neighbors.Add(new Vector2Int(neighborX, neighborY));
                 }
             }
 
             return neighbors;
         }
 
-        private double GetDistance(AStarNode nodeA, AStarNode nodeB)
+        private Vector2Int GetBestNode()
         {
-            return Math.Sqrt(Math.Pow(nodeB.X - nodeA.X, 2) + Math.Pow(nodeB.Y - nodeA.Y, 2));
+            var minF = float.MaxValue;
+            var newNode = new Vector2Int();
+            _openList.ForEach(node =>
+            {
+                var f = GetValueFromDictionary(_gMap, node) + GetValueFromDictionary(_hMap, node);
+                if (f < minF)
+                {
+                    minF = f;
+                    newNode = node;
+                }
+            });
+            return newNode;
+        }
+        
+        private float GetDistance(Vector2Int nodeA, Vector2Int nodeB)
+        {
+            if (nodeA.x == nodeB.x || nodeA.y == nodeB.y)
+            {
+                return 10;
+            }
+            return 16f;
         }
 
-        private Func<AStarNode, AStarNode, double> Heuristic = (nodeA, nodeB) => 
-            Math.Abs(nodeA.X - nodeB.X) + Math.Abs(nodeA.Y - nodeB.Y);
-
-        private List<AStarNode> GeneratePath(AStarNode endNode)
+        private List<Vector2Int> GeneratePath(Vector2Int endNode)
         {
-            var path = new List<AStarNode>();
+            var path = new List<Vector2Int>();
             var currentNode = endNode;
-
-            while (currentNode != null)
+        
+            while (_parentMap.ContainsKey(currentNode))
             {
                 path.Add(currentNode);
-                currentNode = currentNode.Parent;
+                currentNode = _parentMap[currentNode];
             }
-
+            path.Add(currentNode);
             path.Reverse();
             return path;
         }
 
+        
         private void SetStartAndEndNodes()
         {
             _startNode = NodeOfBlock(BlockType.Start);
             _endNode = NodeOfBlock(BlockType.End);
         }
 
-        private AStarNode NodeOfBlock(BlockType blockType)
+        private Vector2Int NodeOfBlock(BlockType blockType)
         {
             for (int i = 0; i < _mapWidth; i++)
             {
                 for (int j = 0; j < _mapHeight; j++)
                 {
                     if (_levelBuilder.MapData.BlocksMap[i, j] == blockType)
-                        return new AStarNode(i, j);
+                        return new Vector2Int(i, j);
                 }
             }
-            return null;
+            return default;
         }
 
-    }
-    
-    public class AStarNode
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public double G { get; set; } // Стоимость пути от начального узла до этого узла
-        public double H { get; set; } // Эвристическая оценка расстояния от этого узла до целевого узла
-        public double F => G + H; // Общая оценка
-
-        public AStarNode Parent { get; set; } // Родительский узел
-
-        public AStarNode(int x, int y)
+        private T GetValueFromDictionary<T>(Dictionary<Vector2Int, T> map, Vector2Int key)
         {
-            X = x;
-            Y = y;
+            if (map.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            return default;
         }
     }
-    
-    // class Program
-    // {
-    //     static void Main(string[] args)
-    //     {
-    //         int[,] map = {
-    //             {0, 0, 0, 0, 0},
-    //             {0, 1, 1, 1, 0},
-    //             {0, 0, 0, 0, 0},
-    //             {0, 1, 1, 1, 0},
-    //             {0, 0, 0, 0, 0}
-    //         };
-    //
-    //         int startX = 0;
-    //         int startY = 0;
-    //         int endX = 4;
-    //         int endY = 4;
-    //
-    //         Func<AStarNode, AStarNode, double> heuristic = (nodeA, nodeB) =>
-    //         {
-    //             return Math.Abs(nodeA.X - nodeB.X) + Math.Abs(nodeA.Y - nodeB.Y); // Манхэттенское расстояние
-    //         };
-    //
-    //         var astar = new AStar(map, startX, startY, endX, endY, heuristic);
-    //         var path = astar.FindPath();
-    //
-    //         if (path != null)
-    //         {
-    //             foreach (var node in path)
-    //             {
-    //                 Console.WriteLine($"({node.X}, {node.Y})");
-    //             }
-    //         }
-    //         else
-    //         {
-    //             Console.WriteLine("Путь не найден.");
-    //         }
-    //     }
-    // }
 }

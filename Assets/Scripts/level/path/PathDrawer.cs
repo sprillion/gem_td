@@ -24,12 +24,13 @@ namespace level.path
             Load();
         }
 
-        private void DrawPath(List<AStarNode> nodes)
+        private void DrawPath(List<Vector2Int> nodes)
         {
+            if (nodes == null) return;
             _line.positionCount = nodes.Count;
             for (int i = 0; i < nodes.Count; i++)
             {
-                var point = new Vector3(nodes[i].X, 0, -nodes[i].Y) * 2;
+                var point = new Vector3(nodes[i].x, 0, -nodes[i].y) * 2;
                 _line.SetPosition(i, point);
             }
         }

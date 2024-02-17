@@ -25,9 +25,7 @@ namespace level.builder
             ResizableColumns = false, SquareCells = true)]
         public BlockType[,] BlocksMap = new BlockType[1, 1];
 
-        public List<Vector2> Points = new List<Vector2>();
-
-
+        public List<Vector2Int> Points = new List<Vector2Int>();
 
         [Button]
         private void Refresh()
@@ -50,8 +48,8 @@ namespace level.builder
             {
                 for (int j = 0; j < Height; j++)
                 {
-                    if (BlocksMap[i, j] != BlockType.Point) continue;
-                    Points.Add(new Vector2(i, j));
+                    if (BlocksMap[i, j] is not (BlockType.Point or BlockType.Start or BlockType.End)) continue;
+                    Points.Add(new Vector2Int(i, j));
                 }
             }
         }

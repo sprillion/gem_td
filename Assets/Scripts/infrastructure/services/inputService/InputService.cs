@@ -28,7 +28,7 @@ namespace infrastructure.services.inputService
             _inputActions.Map.MouseLeftClick.started += OnMouseClickStart;
             _inputActions.Map.MouseLeftClick.canceled += OnMouseClickEnd;
             _inputActions.Map.Space.performed += _ => OnSpacePressed?.Invoke();
-            _inputActions.Map.P.performed += _ => OnPPressed?.Invoke();
+            _inputActions.Map.P.canceled += _ => OnPPressed?.Invoke();
         }
 
         public Vector2 MousePosition()
