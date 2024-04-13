@@ -10,7 +10,7 @@ namespace level.builder
     public class Block : MonoBehaviour, IClickable
     {
         [SerializeField] private BlockType _blockType;
-        private ITowerService _towerService;
+        private ILevelBuilder _levelBuilder;
         private Tower _currentTower;
         public BlockType BlockType => _blockType;
         
@@ -19,9 +19,9 @@ namespace level.builder
         public float Size { get; private set; }
 
         [Inject]
-        public void Construct(ITowerService towerService)
+        public void Construct(ILevelBuilder levelBuilder)
         {
-            _towerService = towerService;
+            _levelBuilder = levelBuilder;
         }
 
         public void SetPosition(int x, int y, float size)
@@ -34,7 +34,7 @@ namespace level.builder
         public void OnClick()
         {
             if (_currentTower != null) return;
-            _currentTower = _towerService.SetTower(X, Y);
+            _currentTower = _levelBuilder.CreateTower(X, Y);
             Debug.Log($"{X}   {Y}");
         }
     }

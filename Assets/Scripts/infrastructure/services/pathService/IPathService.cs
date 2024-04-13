@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using level.builder;
+using towers;
 using UnityEngine;
 
 namespace infrastructure.services.pathService
@@ -6,6 +9,7 @@ namespace infrastructure.services.pathService
     public interface IPathService
     {
         List<Vector2Int> CurrentPath { get; }
-        List<Vector2Int> FindPath();
+        event Action<List<Vector2Int>> OnPathChange; 
+        List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap);
     }
 }

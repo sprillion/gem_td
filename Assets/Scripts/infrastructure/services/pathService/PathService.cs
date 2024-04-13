@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using infrastructure.factories.blocks;
-using infrastructure.services.towerService;
 using level.builder;
 using Sirenix.Utilities;
+using towers;
 using UnityEngine;
 
 namespace infrastructure.services.pathService
 {
     public class PathService : IPathService
     {
-        private readonly ILevelBuilder _levelBuilder;
-        private readonly ITowerService _towerService;
         private readonly Dictionary<Vector2Int, float> _gMap = new Dictionary<Vector2Int, float>();
         private readonly Dictionary<Vector2Int, float> _hMap = new Dictionary<Vector2Int, float>();
         private readonly Dictionary<Vector2Int, Vector2Int> _parentMap = new Dictionary<Vector2Int, Vector2Int>();
@@ -21,34 +18,33 @@ namespace infrastructure.services.pathService
         private readonly Func<Vector2Int, Vector2Int, float> _heuristic = (nodeA, nodeB) => 
             Math.Abs(nodeA.x - nodeB.x) + Math.Abs(nodeA.y - nodeB.y);
 
-        private readonly int _mapWidth;
-        private readonly int _mapHeight;
-
-        private Vector2Int _startNode;
-        private Vector2Int _endNode;
-
+        private MapData _mapData;
+        private TowerType[,] _towerMap;
+        private int _mapWidth;
+        private int _mapHeight;
         public List<Vector2Int> CurrentPath { get; private set; } = new List<Vector2Int>();
 
-        public PathService(ILevelBuilder levelBuilder, ITowerService towerService)
-        {
-            _levelBuilder = levelBuilder;
-            _towerService = towerService;
-            _mapWidth = _towerService.TowerMap.GetLength(0);
-            _mapHeight = _towerService.TowerMap.GetLength(1);
-            SetStartAndEndNodes();
-        }
+        public event Action<List<Vector2Int>> OnPathChange; 
 
-        public List<Vector2Int> FindPath()
+        public List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap)
         {
-            var points = _levelBuilder.MapData.Points;
+            _mapWidth = mapData.Width;
+            _mapHeight = mapData.Height;
+            _towerMap = towerMap;
+            var points = mapData.Points;
             var newPath = new List<Vector2Int>();
             for (int i = 0; i < points.Count - 1; i++)
             {
                 var path = FindPath(points[i], points[i + 1]);
                 if (path == null) return null;
+                if (i > 0)
+                {
+                    path.RemoveAt(0);
+                }
                 newPath.AddRange(path);
             }
             CurrentPath = newPath;
+            OnPathChange?.Invoke(CurrentPath);
             return CurrentPath;
         }
 
@@ -87,6 +83,7 @@ namespace infrastructure.services.pathService
                     }
                 }
             }
+            
             return null;
         }
 
@@ -116,14 +113,14 @@ namespace infrastructure.services.pathService
                     if (neighborX < 0 || neighborX >= _mapWidth || neighborY < 0 || neighborY >= _mapHeight)
                         continue;
                     
-                    if ((int)_towerService.TowerMap[neighborX, neighborY] > 0)
+                    if ((int)_towerMap[neighborX, neighborY] > 0)
                         continue;
                     
                                         
                     if (Math.Abs(x) == Math.Abs(y))
                     {
-                        if ((int)_towerService.TowerMap[neighborX, node.y] > 0 && 
-                            (int)_towerService.TowerMap[node.x, neighborY] > 0)
+                        if ((int)_towerMap[neighborX, node.y] > 0 && 
+                            (int)_towerMap[node.x, neighborY] > 0)
                         {
                             continue;
                         }
@@ -174,26 +171,6 @@ namespace infrastructure.services.pathService
             path.Add(currentNode);
             path.Reverse();
             return path;
-        }
-
-        
-        private void SetStartAndEndNodes()
-        {
-            _startNode = NodeOfBlock(BlockType.Start);
-            _endNode = NodeOfBlock(BlockType.End);
-        }
-
-        private Vector2Int NodeOfBlock(BlockType blockType)
-        {
-            for (int i = 0; i < _mapWidth; i++)
-            {
-                for (int j = 0; j < _mapHeight; j++)
-                {
-                    if (_levelBuilder.MapData.BlocksMap[i, j] == blockType)
-                        return new Vector2Int(i, j);
-                }
-            }
-            return default;
         }
 
         private T GetValueFromDictionary<T>(Dictionary<Vector2Int, T> map, Vector2Int key)

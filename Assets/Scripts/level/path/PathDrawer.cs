@@ -20,7 +20,8 @@ namespace level.path
             _pathService = pathService;
             _resourceProvider = resourceProvider;
             _inputService = inputService;
-            _inputService.OnPPressed += () => DrawPath(_pathService.FindPath());
+            _inputService.OnPPressed += () => DrawPath(_pathService.CurrentPath);
+            _pathService.OnPathChange += DrawPath;
             Load();
         }
 
