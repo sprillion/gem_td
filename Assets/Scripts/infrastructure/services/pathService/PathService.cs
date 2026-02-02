@@ -175,12 +175,7 @@ namespace infrastructure.services.pathService
 
         private T GetValueFromDictionary<T>(Dictionary<Vector2Int, T> map, Vector2Int key)
         {
-            if (map.TryGetValue(key, out var value))
-            {
-                return value;
-            }
-
-            return default;
+            return map.GetValueOrDefault(key);
         }
     }
 }

@@ -4,8 +4,11 @@ using infrastructure.factories.blocks;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using Sirenix.Utilities;
-using UnityEditor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace level.builder
 {
@@ -69,9 +72,11 @@ namespace level.builder
                     textColor = Color.white
                 }
             };
+#if UNITY_EDITOR
             EditorGUI.TextArea(rect.Padding(1), value.ToString(), style);
             EditorGUI.DrawRect(rect.Padding(1), GetColor(value));
-
+#endif
+            
             return value;
         }
 
