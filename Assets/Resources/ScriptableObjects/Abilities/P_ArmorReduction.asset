@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63c517db3a686f74a955055f55b7f548, type: 3}
+  m_Name: P_ArmorReduction
+  m_EditorClassIdentifier: 
+  AbilityType: 5
+  TriggerType: 0
+  Description: Reduces enemy armor temporarily
+  ArmorReductionByLevel: 050000000a0000000f00000014000000
+  DurationByLevel:
+  - 3
+  - 3.5
+  - 4
+  - 4.5

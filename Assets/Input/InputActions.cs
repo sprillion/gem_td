@@ -117,6 +117,24 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""MouseScroll"",
+                    ""type"": ""Value"",
+                    ""id"": ""a1b2c3d4-5e6f-7890-abcd-ef1234567890"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""MouseDelta"",
+                    ""type"": ""Value"",
+                    ""id"": ""b2c3d4e5-6f78-90ab-cdef-123456789012"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -152,6 +170,28 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""action"": ""P"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a1b2c3d4-5e6f-7890-abcd-ef1234567891"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""MouseScroll"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2c3d4e5-6f78-90ab-cdef-123456789013"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""MouseDelta"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -180,6 +220,8 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         m_Map_MouseLeftClick = m_Map.FindAction("MouseLeftClick", throwIfNotFound: true);
         m_Map_Space = m_Map.FindAction("Space", throwIfNotFound: true);
         m_Map_P = m_Map.FindAction("P", throwIfNotFound: true);
+        m_Map_MouseScroll = m_Map.FindAction("MouseScroll", throwIfNotFound: true);
+        m_Map_MouseDelta = m_Map.FindAction("MouseDelta", throwIfNotFound: true);
     }
 
     ~@InputActions()
@@ -263,6 +305,8 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Map_MouseLeftClick;
     private readonly InputAction m_Map_Space;
     private readonly InputAction m_Map_P;
+    private readonly InputAction m_Map_MouseScroll;
+    private readonly InputAction m_Map_MouseDelta;
     /// <summary>
     /// Provides access to input actions defined in input action map "Map".
     /// </summary>
@@ -286,6 +330,14 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Map/P".
         /// </summary>
         public InputAction @P => m_Wrapper.m_Map_P;
+        /// <summary>
+        /// Provides access to the underlying input action "Map/MouseScroll".
+        /// </summary>
+        public InputAction @MouseScroll => m_Wrapper.m_Map_MouseScroll;
+        /// <summary>
+        /// Provides access to the underlying input action "Map/MouseDelta".
+        /// </summary>
+        public InputAction @MouseDelta => m_Wrapper.m_Map_MouseDelta;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -321,6 +373,12 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @P.started += instance.OnP;
             @P.performed += instance.OnP;
             @P.canceled += instance.OnP;
+            @MouseScroll.started += instance.OnMouseScroll;
+            @MouseScroll.performed += instance.OnMouseScroll;
+            @MouseScroll.canceled += instance.OnMouseScroll;
+            @MouseDelta.started += instance.OnMouseDelta;
+            @MouseDelta.performed += instance.OnMouseDelta;
+            @MouseDelta.canceled += instance.OnMouseDelta;
         }
 
         /// <summary>
@@ -341,6 +399,12 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @P.started -= instance.OnP;
             @P.performed -= instance.OnP;
             @P.canceled -= instance.OnP;
+            @MouseScroll.started -= instance.OnMouseScroll;
+            @MouseScroll.performed -= instance.OnMouseScroll;
+            @MouseScroll.canceled -= instance.OnMouseScroll;
+            @MouseDelta.started -= instance.OnMouseDelta;
+            @MouseDelta.performed -= instance.OnMouseDelta;
+            @MouseDelta.canceled -= instance.OnMouseDelta;
         }
 
         /// <summary>
@@ -415,5 +479,19 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnP(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "MouseScroll" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMouseScroll(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "MouseDelta" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMouseDelta(InputAction.CallbackContext context);
     }
 }

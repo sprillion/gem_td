@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TowerType: 8
   Level: 0
-  Damage: 0
-  AttackSpeed: 0
-  AttackRange: 0
+  Damage: 1
+  AttackSpeed: 10
+  AttackRange: 10
+  Abilities:
+  - {fileID: 11400000, guid: cce3e6fac68898247aafe3fd6078275d, type: 2}

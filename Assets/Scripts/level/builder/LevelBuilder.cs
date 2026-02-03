@@ -1,5 +1,6 @@
 ﻿using infrastructure.factories.blocks;
 using infrastructure.factories.towers;
+using infrastructure.services.gameStateService;
 using infrastructure.services.inputService;
 using infrastructure.services.pathService;
 using infrastructure.services.resourceProvider;
@@ -11,7 +12,7 @@ namespace level.builder
 {
     public class LevelBuilder : ILevelBuilder
     {
-        private const string MapPath = "ScriptableObjects/Maps/Map";
+        private const string MapPath = "ScriptableObjects/Maps/Map37";
         
         private readonly IResourceProvider _resourceProvider;
         private readonly IBlockFactory _blockFactory;
@@ -20,15 +21,17 @@ namespace level.builder
         private readonly ITowerFactory _towerFactory;
         private readonly IPathService _pathService;
 
+        private IGameStateService _gameStateService;
+
         private MapData _mapData;
         private TowerType[,] _towerMap;
-        
+
         public MapData MapData => _mapData;
         public TowerType[,] TowerMap => _towerMap;
-        
+
         public LevelBuilder(
-            IResourceProvider resourceProvider, 
-            IBlockFactory blockFactory, 
+            IResourceProvider resourceProvider,
+            IBlockFactory blockFactory,
             IInputService inputService,
             ITowerService towerService,
             ITowerFactory towerFactory,
@@ -46,6 +49,11 @@ namespace level.builder
             _inputService.OnSpacePressed += Build;
         }
 
+        public void Initialize(IGameStateService gameStateService)
+        {
+            _gameStateService = gameStateService;
+        }
+
         public void Build()
         {
             var parent = new GameObject("Map").transform;
@@ -61,6 +69,15 @@ namespace level.builder
 
         public Tower CreateTower(int x, int y)
         {
+            // Prevent placement during combat/selection
+            if (_gameStateService != null &&
+                (_gameStateService.CurrentPhase == GamePhase.COMBAT ||
+                _gameStateService.CurrentPhase == GamePhase.SELECTING_TOWER))
+            {
+                Debug.Log("Cannot place towers during " + _gameStateService.CurrentPhase);
+                return null;
+            }
+
             if (!CanSetOnBlock(x, y)) return null;
             var towerType = _towerService.GetTowerTypeFromChance();
             _towerMap[x, y] = towerType;
@@ -70,8 +87,17 @@ namespace level.builder
                 return null;
             }
             var tower = _towerFactory.CreateTower(towerType, _towerService.GetLevelFromChance());
-            tower.transform.position = new Vector3(x, 0, -y) * MapData.BlockSize; 
+            tower.transform.position = new Vector3(x, 0, -y) * MapData.BlockSize;
+
+            // Register with state service if available
+            _gameStateService?.RegisterTowerPlacement(tower);
+
             return tower;
+        }
+
+        public void SetTowerType(int x, int y, TowerType towerType)
+        {
+            _towerMap[x, y] = towerType;
         }
 
         private void Load()

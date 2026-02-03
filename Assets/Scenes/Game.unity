@@ -618,8 +618,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _target: {fileID: 1870755834}
-  _boardSize: 30
-  _moveSpeed: 30
+  _camera: {fileID: 330585545}
+  _virtualCamera: {fileID: 1513329330}
+  _dragSpeed: 4
+  _zoomSpeed: 2
+  _minZoom: 25
+  _maxZoom: 100
 --- !u!4 &968179750
 Transform:
   m_ObjectHideFlags: 0

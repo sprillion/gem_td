@@ -22,15 +22,17 @@ namespace infrastructure.services.pathService
         private TowerType[,] _towerMap;
         private int _mapWidth;
         private int _mapHeight;
+        private bool _ignoreTowers;
         public List<Vector2Int> CurrentPath { get; private set; } = new List<Vector2Int>();
 
-        public event Action<List<Vector2Int>> OnPathChange; 
+        public event Action<List<Vector2Int>> OnPathChange;
 
-        public List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap)
+        public List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap, bool ignoreTowers = false)
         {
             _mapWidth = mapData.Width;
             _mapHeight = mapData.Height;
             _towerMap = towerMap;
+            _ignoreTowers = ignoreTowers;
             var points = mapData.Points;
             var newPath = new List<Vector2Int>();
             for (int i = 0; i < points.Count - 1; i++)
@@ -112,14 +114,16 @@ namespace infrastructure.services.pathService
 
                     if (neighborX < 0 || neighborX >= _mapWidth || neighborY < 0 || neighborY >= _mapHeight)
                         continue;
-                    
-                    if ((int)_towerMap[neighborX, neighborY] > 0)
+
+                    // Flying enemies ignore towers
+                    if (!_ignoreTowers && (int)_towerMap[neighborX, neighborY] > 0)
                         continue;
-                    
-                                        
-                    if (Math.Abs(x) == Math.Abs(y))
+
+
+                    // Prevent diagonal squeeze through towers (unless flying)
+                    if (!_ignoreTowers && Math.Abs(x) == Math.Abs(y))
                     {
-                        if ((int)_towerMap[neighborX, node.y] > 0 && 
+                        if ((int)_towerMap[neighborX, node.y] > 0 &&
                             (int)_towerMap[node.x, neighborY] > 0)
                         {
                             continue;

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using towers.abilities;
+using UnityEngine;
 
 namespace towers
 {
@@ -10,5 +12,8 @@ namespace towers
         public int Damage;
         public int AttackSpeed;
         public float AttackRange;
+
+        [Header("Abilities")]
+        public List<AbilityData> Abilities = new List<AbilityData>();
     }
 }

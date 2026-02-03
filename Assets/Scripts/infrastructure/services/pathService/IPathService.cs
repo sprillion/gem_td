@@ -9,7 +9,7 @@ namespace infrastructure.services.pathService
     public interface IPathService
     {
         List<Vector2Int> CurrentPath { get; }
-        event Action<List<Vector2Int>> OnPathChange; 
-        List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap);
+        event Action<List<Vector2Int>> OnPathChange;
+        List<Vector2Int> FindPath(MapData mapData, TowerType[,] towerMap, bool ignoreTowers = false);
     }
 }

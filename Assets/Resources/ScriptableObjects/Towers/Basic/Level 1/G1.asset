@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TowerType: 5
   Level: 0
-  Damage: 0
-  AttackSpeed: 0
-  AttackRange: 0
+  Damage: 1
+  AttackSpeed: 10
+  AttackRange: 10
+  Abilities:
+  - {fileID: 11400000, guid: 05329e635f4ea9a4caab54e917188d8b, type: 2}

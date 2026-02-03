@@ -61,11 +61,31 @@ namespace infrastructure.factories.towers
 
         private void CreateTowerModel(Tower tower)
         {
+            Debug.Log($"{tower == null}  {tower.TowerData == null}");
+            Debug.Log(tower.TowerData.TowerType);
             var modelPrefab = _basicTowerModels.FirstOrDefault(model => model.TowerType == tower.TowerData.TowerType);
             var model = _diContainer.InstantiatePrefabForComponent<TowerModel>(modelPrefab);
             model.transform.SetParent(tower.ScaledObject);
             tower.ScaledObject.localScale = Vector3.one * _towerSettings.ScaleFromLevel[tower.TowerData.Level];
 
+        }
+
+        public void ReplaceWithStoneModel(Tower tower)
+        {
+            // Destroy existing tower model
+            foreach (Transform child in tower.ScaledObject)
+            {
+                Object.Destroy(child.gameObject);
+            }
+
+            // Instantiate stone model
+            var stoneModel = _diContainer.InstantiatePrefabForComponent<TowerModel>(_stoneModel);
+            stoneModel.transform.SetParent(tower.ScaledObject);
+            stoneModel.transform.localPosition = Vector3.zero;
+            stoneModel.transform.localRotation = Quaternion.identity;
+
+            // Reset scale to normal (stone towers don't scale with level)
+            tower.ScaledObject.localScale = Vector3.one;
         }
     }
 }
