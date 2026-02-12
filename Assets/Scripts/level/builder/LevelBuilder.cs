@@ -1,4 +1,5 @@
-﻿using infrastructure.factories.blocks;
+﻿using System.Collections.Generic;
+using infrastructure.factories.blocks;
 using infrastructure.factories.towers;
 using infrastructure.services.gameStateService;
 using infrastructure.services.inputService;
@@ -13,7 +14,7 @@ namespace level.builder
     public class LevelBuilder : ILevelBuilder
     {
         private const string MapPath = "ScriptableObjects/Maps/Map37";
-        
+
         private readonly IResourceProvider _resourceProvider;
         private readonly IBlockFactory _blockFactory;
         private readonly IInputService _inputService;
@@ -25,6 +26,7 @@ namespace level.builder
 
         private MapData _mapData;
         private TowerType[,] _towerMap;
+        private Dictionary<Vector2Int, Tower> _towerGameObjects = new Dictionary<Vector2Int, Tower>();
 
         public MapData MapData => _mapData;
         public TowerType[,] TowerMap => _towerMap;
@@ -89,10 +91,54 @@ namespace level.builder
             var tower = _towerFactory.CreateTower(towerType, _towerService.GetLevelFromChance());
             tower.transform.position = new Vector3(x, 0, -y) * MapData.BlockSize;
 
+            // Track tower GameObject
+            _towerGameObjects[new Vector2Int(x, y)] = tower;
+
             // Register with state service if available
             _gameStateService?.RegisterTowerPlacement(tower);
 
             return tower;
+        }
+
+        public Tower GetTowerAtPosition(int x, int y)
+        {
+            return _towerGameObjects.TryGetValue(new Vector2Int(x, y), out Tower tower) ? tower : null;
+        }
+
+        public void RestoreTower(TowerType towerType, int level, int x, int y)
+        {
+            // Update tower map
+            _towerMap[x, y] = towerType;
+
+            // Create tower GameObject
+            Tower tower;
+            if (towerType == TowerType.Stone)
+            {
+                // For stone towers, create a basic tower first (P type, level 0)
+                // then replace its model with stone
+                tower = _towerFactory.CreateTower(TowerType.P, 0);
+                _towerFactory.ReplaceWithStoneModel(tower);
+
+                // Disable combat functionality for stone towers
+                var enemyTrigger = tower.GetComponent<EnemyTrigger>();
+                if (enemyTrigger != null)
+                {
+                    UnityEngine.Object.Destroy(enemyTrigger);
+                }
+                tower.enabled = false;
+            }
+            else
+            {
+                // For combat towers, use saved level
+                tower = _towerFactory.CreateTower(towerType, level);
+            }
+
+            tower.transform.position = new Vector3(x, 0, -y) * MapData.BlockSize;
+
+            // Track tower GameObject
+            _towerGameObjects[new Vector2Int(x, y)] = tower;
+
+            Debug.Log($"Restored tower {towerType} (Level {level}) at ({x}, {y})");
         }
 
         public void SetTowerType(int x, int y, TowerType towerType)

@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using infrastructure.services.gameStateService;
+using infrastructure.services.inputService;
 using infrastructure.services.pathService;
+using infrastructure.services.selectionService;
+using level;
 using level.builder;
+using ui.healthBar;
 using UnityEngine;
 using Zenject;
 
 namespace enemies
 {
-    public class Enemy : MonoBehaviour
+    public class Enemy : MonoBehaviour, IClickable
     {
         private IPathService _pathService;
         private ILevelBuilder _levelBuilder;
+        private ISelectionService _selectionService;
+        private IGameStateService _gameStateService;
 
         private EnemyData _enemyData;
         private List<Vector3> _path;
@@ -22,22 +29,28 @@ namespace enemies
         private float _moveSpeedModifier = 1f;
         private int _armorModifier = 0;
 
+        // Health bar
+        private HealthBar _healthBar;
+
         public int CurrentHealth => _currentHealth;
         public bool IsAlive => _isAlive;
         public EnemyData EnemyData => _enemyData;
+        public int GoldReward => _enemyData != null ? _enemyData.GoldReward : 0;
 
         // Computed properties with modifiers
         public float CurrentMoveSpeed => _enemyData.MoveSpeed * _moveSpeedModifier;
         public int CurrentArmor => _enemyData.Armor + _armorModifier;
 
-        public event Action OnDeath;
+        public event Action<Enemy> OnDeath;
         public event Action OnReachedEnd;
 
         [Inject]
-        private void Construct(IPathService pathService, ILevelBuilder levelBuilder)
+        private void Construct(IPathService pathService, ILevelBuilder levelBuilder, ISelectionService selectionService, IGameStateService gameStateService)
         {
             _pathService = pathService;
             _levelBuilder = levelBuilder;
+            _selectionService = selectionService;
+            _gameStateService = gameStateService;
         }
 
         public void Initialize(EnemyData enemyData)
@@ -46,6 +59,28 @@ namespace enemies
             _currentHealth = enemyData.Health;
             _isAlive = true;
             SetPath();
+            CreateClickCollider();
+        }
+
+        private void CreateClickCollider()
+        {
+            var clickTarget = new GameObject("ClickTarget");
+            clickTarget.transform.SetParent(transform);
+            clickTarget.transform.localPosition = Vector3.zero;
+            clickTarget.layer = gameObject.layer;
+            var collider = clickTarget.AddComponent<BoxCollider>();
+            collider.size = new Vector3(1f, 2f, 1f);
+        }
+
+        public void OnClick()
+        {
+            _selectionService?.SelectEnemy(this);
+        }
+
+        public void SetHealthBar(HealthBar healthBar)
+        {
+            _healthBar = healthBar;
+            _healthBar.Initialize(transform, _enemyData.Health);
         }
 
         public void TakeDamage(int damage)
@@ -53,6 +88,11 @@ namespace enemies
             if (!_isAlive) return;
 
             _currentHealth -= damage;
+
+            if (_healthBar != null)
+            {
+                _healthBar.SetHealth(_currentHealth);
+            }
 
             if (_currentHealth <= 0)
             {
@@ -75,7 +115,7 @@ namespace enemies
             if (!_isAlive) return;
 
             _isAlive = false;
-            OnDeath?.Invoke();
+            OnDeath?.Invoke(this);
             Destroy(gameObject);
         }
 

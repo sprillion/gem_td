@@ -32,7 +32,7 @@ namespace infrastructure.services.effectService
             {
                 _activeEffects[enemy] = new List<Effect>();
                 // Subscribe to enemy death to clean up effects
-                enemy.OnDeath += () => ClearEffects(enemy);
+                enemy.OnDeath += ClearEffects;
             }
 
             // Check for duplicate effect type - refresh duration instead of stacking
@@ -79,6 +79,14 @@ namespace infrastructure.services.effectService
 
             _activeEffects.Remove(enemy);
             Debug.Log($"Cleared all effects from {enemy.name}");
+        }
+
+        public List<Effect> GetActiveEffects(Enemy enemy)
+        {
+            if (!_activeEffects.ContainsKey(enemy))
+                return new List<Effect>();
+
+            return new List<Effect>(_activeEffects[enemy]);
         }
 
         private void OnUpdate()

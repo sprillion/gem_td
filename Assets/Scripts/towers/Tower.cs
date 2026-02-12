@@ -5,6 +5,8 @@ using infrastructure.services.abilityService;
 using infrastructure.services.combatService;
 using infrastructure.services.gameStateService;
 using infrastructure.services.inputService;
+using infrastructure.services.projectileService;
+using infrastructure.services.selectionService;
 using infrastructure.services.updateService;
 using towers.abilities;
 using UnityEngine;
@@ -22,21 +24,41 @@ namespace towers
         private IUpdateService _updateService;
         private ICombatService _combatService;
         private IGameStateService _gameStateService;
+        private ISelectionService _selectionService;
         private IAbilityService _abilityService;
+        private IProjectileService _projectileService;
 
         public TowerData TowerData { get; private set; }
         public Transform ScaledObject;
 
+        private GameObject _highlightEffect;
+        private ParticleSystem _highlightParticles;
+
+        public List<Enemy> EnemiesInRange => _enemiesInside;
+
         [Inject]
         public void Construct(IUpdateService updateService, ICombatService combatService,
-                            IGameStateService gameStateService, IAbilityService abilityService)
+                            IGameStateService gameStateService, ISelectionService selectionService,
+                            IAbilityService abilityService, IProjectileService projectileService)
         {
             _updateService = updateService;
             _combatService = combatService;
             _gameStateService = gameStateService;
+            _selectionService = selectionService;
             _abilityService = abilityService;
+            _projectileService = projectileService;
 
             _updateService.OnUpdate += OnUpdate;
+
+            CreateClickCollider();
+        }
+
+        private void CreateClickCollider()
+        {
+            var clickTarget = new GameObject("ClickTarget");
+            clickTarget.transform.SetParent(transform);
+            clickTarget.transform.localPosition = Vector3.zero;
+            clickTarget.AddComponent<BoxCollider>();
         }
 
         public void Initialize(TowerData towerData)
@@ -60,10 +82,15 @@ namespace towers
 
         public void OnClick()
         {
+            // Special handling for SELECTING_TOWER phase (game flow)
             if (_gameStateService.CurrentPhase == GamePhase.SELECTING_TOWER)
             {
                 _gameStateService.SelectTower(this);
+                return;
             }
+
+            // For all other phases, use SelectionService (info panel)
+            _selectionService?.SelectTower(this);
         }
 
         private void OnUpdate()
@@ -83,13 +110,59 @@ namespace towers
             {
                 _combatService.RegisterAttack(this);
 
-                // Execute OnAttack abilities BEFORE damage (D, R, Y)
-                _abilityService.ExecuteAbilities(this, _currentTarget, _enemiesInside);
+                var targets = _abilityService.CollectAttackTargets(this, _currentTarget, _enemiesInside);
 
-                // Deal primary damage with armor reduction
-                _combatService.DealDamage(_currentTarget, TowerData.Damage);
+                foreach (var projectileTarget in targets)
+                {
+                    var target = projectileTarget.Target;
+                    var damage = projectileTarget.Damage;
+                    var isPrimary = projectileTarget.IsPrimary;
 
-                Debug.Log($"Tower {TowerData.TowerType} attacked for {TowerData.Damage} damage");
+                    _projectileService.SpawnProjectile(this, target, () =>
+                    {
+                        if (target == null || !target.IsAlive) return;
+
+                        _combatService.DealDamage(target, damage);
+
+                        if (isPrimary)
+                        {
+                            _abilityService.ExecuteSplashOnArrival(this, target, _enemiesInside);
+                            _abilityService.ExecuteOnHitAbilities(this, target);
+                        }
+                    });
+                }
+            }
+        }
+
+        public void SetHighlightEffect(GameObject highlightPrefab)
+        {
+            if (_highlightEffect != null)
+            {
+                Destroy(_highlightEffect);
+            }
+
+            _highlightEffect = Instantiate(highlightPrefab, transform);
+            _highlightEffect.transform.localPosition = Vector3.zero;
+            _highlightParticles = _highlightEffect.GetComponent<ParticleSystem>();
+
+            // Don't play immediately - wait for SetHighlight call
+            if (_highlightParticles != null)
+            {
+                _highlightParticles.Stop();
+            }
+        }
+
+        public void SetHighlight(bool enabled)
+        {
+            if (_highlightParticles == null) return;
+
+            if (enabled)
+            {
+                _highlightParticles.Play();
+            }
+            else
+            {
+                _highlightParticles.Stop();
             }
         }
 
@@ -103,6 +176,11 @@ namespace towers
             if (_abilityService != null)
             {
                 _abilityService.UnregisterAuraTower(this);
+            }
+
+            if (_highlightEffect != null)
+            {
+                Destroy(_highlightEffect);
             }
         }
         

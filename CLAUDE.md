@@ -536,3 +536,5 @@ The game requires both scenes to function:
 2. **Game.unity** loads next (sets up scene context and gameplay)
 
 This is configured in `ProjectSettings/EditorBuildSettings.asset`.
+
+**use ai-game-developer mcp to interact with Unity**

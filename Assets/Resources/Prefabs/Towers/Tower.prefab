@@ -135,6 +135,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6653818939260764917}
   - component: {fileID: 7370828963381012901}
+  - component: {fileID: 1682565592846638382}
   m_Layer: 0
   m_Name: Tower
   m_TagString: Untagged
@@ -173,3 +174,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _enemyTrigger: {fileID: 309550025838946672}
   ScaledObject: {fileID: 5045056060222087017}
+--- !u!135 &1682565592846638382
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7296996642257048674}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}

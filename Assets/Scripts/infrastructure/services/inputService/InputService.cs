@@ -1,7 +1,10 @@
 ﻿using System;
+using infrastructure.services.selectionService;
 using infrastructure.services.updateService;
+using towers;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Zenject;
 
 namespace infrastructure.services.inputService
 {
@@ -12,6 +15,7 @@ namespace infrastructure.services.inputService
 
         private readonly InputActions _inputActions;
         private readonly IUpdateService _updateService;
+        private readonly ISelectionService _selectionService;
         private readonly Camera _camera;
 
         private float _clickDuration;
@@ -22,10 +26,12 @@ namespace infrastructure.services.inputService
         public event Action OnSpacePressed;
         public event Action OnPPressed;
 
-        public InputService(InputActions inputActions, IUpdateService updateService)
+        [Inject]
+        public InputService(InputActions inputActions, IUpdateService updateService, ISelectionService selectionService)
         {
             _inputActions = inputActions;
             _updateService = updateService;
+            _selectionService = selectionService;
             _camera = Camera.main;
             _inputActions.Enable();
             _updateService.OnUpdate += Update;
@@ -49,6 +55,26 @@ namespace infrastructure.services.inputService
             {
                 var mouseDelta = GetMouseDelta();
                 _totalMouseMovement += mouseDelta.magnitude;
+            }
+
+            // Check hover for range circle preview
+            CheckHover();
+        }
+
+        private void CheckHover()
+        {
+            var ray = _camera.ScreenPointToRay(Mouse.current.position.value);
+            var isHit = Physics.Raycast(ray, out var raycastHit, Mathf.Infinity,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+            if (isHit && raycastHit.collider.transform.parent != null &&
+                raycastHit.collider.transform.parent.TryGetComponent(out Tower tower))
+            {
+                _selectionService.SetHoveredTower(tower);
+            }
+            else
+            {
+                _selectionService.ClearHover();
             }
         }
 
@@ -76,9 +102,16 @@ namespace infrastructure.services.inputService
         private void ClickOnClickableObject()
         {
             var ray = _camera.ScreenPointToRay(Mouse.current.position.value);
-            var isHit = Physics.Raycast(ray, out var raycastHit);
-            if (!isHit) return;
-            if (!raycastHit.collider.transform.parent.TryGetComponent(out IClickable clickable)) return;
+            var isHit = Physics.Raycast(ray, out var raycastHit, Mathf.Infinity, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+            if (!isHit || raycastHit.collider.transform.parent == null ||
+                !raycastHit.collider.transform.parent.TryGetComponent(out IClickable clickable))
+            {
+                // Clicked on empty space - clear selection
+                _selectionService.ClearSelection();
+                return;
+            }
+
             clickable.OnClick();
         }
 

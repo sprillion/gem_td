@@ -7,6 +7,7 @@ using infrastructure.services.updateService;
 using towers;
 using towers.abilities;
 using towers.abilities.effects;
+using towers.projectiles;
 using UnityEngine;
 using Zenject;
 
@@ -58,6 +59,101 @@ namespace infrastructure.services.abilityService
                     case AbilityTrigger.Passive:
                     case AbilityTrigger.Aura:
                         break;
+                }
+            }
+        }
+
+        public List<ProjectileTarget> CollectAttackTargets(Tower tower, Enemy primaryTarget, List<Enemy> enemiesInRange)
+        {
+            var targets = new List<ProjectileTarget>();
+
+            if (primaryTarget == null || !primaryTarget.IsAlive)
+                return targets;
+
+            int baseDamage = tower.TowerData.Damage;
+            int primaryDamage = baseDamage;
+            int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 3);
+
+            if (tower.TowerData.Abilities != null)
+            {
+                foreach (var ability in tower.TowerData.Abilities)
+                {
+                    if (ability == null) continue;
+
+                    // BonusDamage (D): add bonus to primary target damage
+                    if (ability.TriggerType == AbilityTrigger.OnAttack && ability.AbilityType == AbilityType.BonusDamage)
+                    {
+                        var bonusAbility = ability as BonusDamageAbility;
+                        if (bonusAbility != null)
+                            primaryDamage += bonusAbility.BonusDamageByLevel[towerLevel];
+                    }
+
+                    // MultiTarget (Y): add additional targets
+                    if (ability.TriggerType == AbilityTrigger.OnAttack && ability.AbilityType == AbilityType.MultiTarget)
+                    {
+                        var multiAbility = ability as MultiTargetAbility;
+                        if (multiAbility != null)
+                        {
+                            int additionalTargets = multiAbility.AdditionalTargetsByLevel[towerLevel];
+                            var otherEnemies = enemiesInRange
+                                .Where(e => e != null && e.IsAlive && e != primaryTarget)
+                                .Take(additionalTargets);
+
+                            foreach (var enemy in otherEnemies)
+                            {
+                                targets.Add(new ProjectileTarget(enemy, baseDamage, false));
+                            }
+                        }
+                    }
+
+                    // SplashDamage (R): handled on arrival via ExecuteSplashOnArrival, not added to target list
+                }
+            }
+
+            // Primary target always first
+            targets.Insert(0, new ProjectileTarget(primaryTarget, primaryDamage, true));
+
+            return targets;
+        }
+
+        public void ExecuteOnHitAbilities(Tower tower, Enemy target)
+        {
+            if (tower?.TowerData?.Abilities == null || tower.TowerData.Abilities.Count == 0)
+                return;
+
+            if (target == null || !target.IsAlive)
+                return;
+
+            int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 3);
+
+            foreach (var ability in tower.TowerData.Abilities)
+            {
+                if (ability == null) continue;
+
+                if (ability.TriggerType == AbilityTrigger.OnHit)
+                {
+                    ExecuteOnHitAbility(target, ability, towerLevel);
+                }
+            }
+        }
+
+        public void ExecuteSplashOnArrival(Tower tower, Enemy primaryTarget, List<Enemy> enemiesInRange)
+        {
+            if (tower?.TowerData?.Abilities == null)
+                return;
+
+            if (primaryTarget == null || !primaryTarget.IsAlive)
+                return;
+
+            int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 3);
+
+            foreach (var ability in tower.TowerData.Abilities)
+            {
+                if (ability == null) continue;
+
+                if (ability.TriggerType == AbilityTrigger.OnAttack && ability.AbilityType == AbilityType.SplashDamage)
+                {
+                    ExecuteSplashDamage(tower, primaryTarget, enemiesInRange, ability as SplashDamageAbility, towerLevel);
                 }
             }
         }

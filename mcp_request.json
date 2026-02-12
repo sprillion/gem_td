@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":202,"method":"tools/call","params":{"name":"console-get-logs","arguments":{"logType":"Error","maxCount":10}}}

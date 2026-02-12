@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace infrastructure.services.playerService
@@ -7,9 +8,18 @@ namespace infrastructure.services.playerService
         private int _playerLevel = 1;
         private int _currentXP = 0;
         private int _lives = 20;
+        private int _gold = 0;
 
         public int PlayerLevel => _playerLevel;
         public int Lives => _lives;
+        public int CurrentXP => _currentXP;
+        public int XPForNextLevel => _playerLevel * 100;
+        public int Gold => _gold;
+
+        public event Action<int> OnLevelChanged;
+        public event Action<int> OnXPChanged;
+        public event Action<int> OnGoldChanged;
+        public event Action<int> OnLivesChanged;
 
         public int GetRandomTowerLevel()
         {
@@ -17,7 +27,7 @@ namespace infrastructure.services.playerService
             // Level 0 is most common, higher levels less common
             // Formula: weighted by player level
 
-            float roll = Random.value;
+            float roll = UnityEngine.Random.value;
 
             // 50% chance for level 0
             if (roll < 0.5f) return 0;
@@ -36,6 +46,7 @@ namespace infrastructure.services.playerService
         {
             _currentXP += xp;
             Debug.Log($"Awarded {xp} XP. Total: {_currentXP}");
+            OnXPChanged?.Invoke(_currentXP);
 
             // Simple level up: every 100 XP
             int xpForLevel = _playerLevel * 100;
@@ -44,6 +55,8 @@ namespace infrastructure.services.playerService
                 _playerLevel++;
                 _currentXP -= xpForLevel;
                 Debug.Log($"Level up! Now level {_playerLevel}");
+                OnLevelChanged?.Invoke(_playerLevel);
+                OnXPChanged?.Invoke(_currentXP);
             }
         }
 
@@ -51,12 +64,36 @@ namespace infrastructure.services.playerService
         {
             _lives -= amount;
             Debug.Log($"Lost {amount} life. Lives remaining: {_lives}");
+            OnLivesChanged?.Invoke(_lives);
 
             if (_lives <= 0)
             {
                 Debug.Log("Game Over!");
                 // TODO: Trigger game over state
             }
+        }
+
+        public void AddGold(int amount)
+        {
+            _gold += amount;
+            Debug.Log($"Added {amount} gold. Total: {_gold}");
+            OnGoldChanged?.Invoke(_gold);
+        }
+
+        public void LoadPlayerData(int level, int xp, int lives, int gold)
+        {
+            _playerLevel = level;
+            _currentXP = xp;
+            _lives = lives;
+            _gold = gold;
+
+            Debug.Log($"Player data loaded: Level {_playerLevel}, XP {_currentXP}, Lives {_lives}, Gold {_gold}");
+
+            // Fire events for UI updates
+            OnLevelChanged?.Invoke(_playerLevel);
+            OnXPChanged?.Invoke(_currentXP);
+            OnLivesChanged?.Invoke(_lives);
+            OnGoldChanged?.Invoke(_gold);
         }
     }
 }

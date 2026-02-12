@@ -8,6 +8,21 @@ namespace towers.abilities.effects
         private readonly float _slowPercent;
         private readonly float _originalSpeed;
         private float _slowedSpeed;
+        private static Sprite _cachedIcon;
+
+        public override string DisplayName => "Slow";
+        public override string Description => $"Movement speed reduced by {_slowPercent:F0}%";
+        public override Sprite Icon
+        {
+            get
+            {
+                if (_cachedIcon == null)
+                {
+                    _cachedIcon = Resources.Load<Sprite>("Icons/Effects/Slow");
+                }
+                return _cachedIcon;
+            }
+        }
 
         public SlowEffect(float duration, float slowPercent) : base(duration)
         {

@@ -14,6 +14,7 @@ namespace infrastructure.factories.towers
         private const string StoneModelsPath = "Prefabs/Towers/Stone";
         private const string TowerPath = "Prefabs/Towers/Tower";
         private const string TowerSettingsPath = "ScriptableObjects/Towers/TowerSettings";
+        private const string TowerHighlightPath = "Prefabs/Effects/TowerHighlight";
         
         private readonly IResourceProvider _resourceProvider;
         private readonly DiContainer _diContainer;
@@ -24,6 +25,7 @@ namespace infrastructure.factories.towers
         private Tower _tower;
         private TowerSettings _towerSettings;
         private Transform _towerParent;
+        private GameObject _towerHighlightPrefab;
 
         public TowerFactory(IResourceProvider resourceProvider, DiContainer diContainer)
         {
@@ -40,6 +42,17 @@ namespace infrastructure.factories.towers
             var towerData = _towersData.FirstOrDefault(data => data.TowerType == towerType && data.Level == towerLevel);
             tower.Initialize(towerData);
             CreateTowerModel(tower);
+
+            // Add range circle drawer
+            var rangeDrawer = tower.gameObject.AddComponent<RangeCircleDrawer>();
+            rangeDrawer.Initialize(towerData.AttackRange);
+
+            // Add highlight effect to tower
+            if (_towerHighlightPrefab != null)
+            {
+                tower.SetHighlightEffect(_towerHighlightPrefab);
+            }
+
             return tower;
         }
 
@@ -50,6 +63,7 @@ namespace infrastructure.factories.towers
             _stoneModel = _resourceProvider.Load<TowerModel>(StoneModelsPath);
             _tower = _resourceProvider.Load<Tower>(TowerPath);
             _towerSettings = _resourceProvider.Load<TowerSettings>(TowerSettingsPath);
+            _towerHighlightPrefab = _resourceProvider.Load<GameObject>(TowerHighlightPath);
             CreateTowerParent();
         }
 
@@ -61,13 +75,32 @@ namespace infrastructure.factories.towers
 
         private void CreateTowerModel(Tower tower)
         {
-            Debug.Log($"{tower == null}  {tower.TowerData == null}");
-            Debug.Log(tower.TowerData.TowerType);
+            if (tower == null || tower.TowerData == null)
+            {
+                Debug.LogError("Cannot create tower model: Tower or TowerData is null");
+                return;
+            }
+
             var modelPrefab = _basicTowerModels.FirstOrDefault(model => model.TowerType == tower.TowerData.TowerType);
+
+            if (modelPrefab == null)
+            {
+                Debug.LogError($"No model prefab found for tower type: {tower.TowerData.TowerType}. Check Resources/{BasicTowerModelsPath}");
+                return;
+            }
+
             var model = _diContainer.InstantiatePrefabForComponent<TowerModel>(modelPrefab);
             model.transform.SetParent(tower.ScaledObject);
-            tower.ScaledObject.localScale = Vector3.one * _towerSettings.ScaleFromLevel[tower.TowerData.Level];
 
+            if (_towerSettings != null && _towerSettings.ScaleFromLevel != null &&
+                tower.TowerData.Level < _towerSettings.ScaleFromLevel.Count)
+            {
+                tower.ScaledObject.localScale = Vector3.one * _towerSettings.ScaleFromLevel[tower.TowerData.Level];
+            }
+            else
+            {
+                tower.ScaledObject.localScale = Vector3.one;
+            }
         }
 
         public void ReplaceWithStoneModel(Tower tower)

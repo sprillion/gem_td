@@ -1,4 +1,5 @@
 ﻿using infrastructure.services.inputService;
+using level.builder;
 using UnityEngine;
 using Zenject;
 using Cinemachine;
@@ -16,11 +17,13 @@ namespace cameras
         [SerializeField] private float _maxZoom = 50f;
 
         private IInputService _inputService;
+        private ILevelBuilder _levelBuilder;
 
         [Inject]
-        public void Construct(IInputService inputService)
+        public void Construct(IInputService inputService, ILevelBuilder levelBuilder)
         {
             _inputService = inputService;
+            _levelBuilder = levelBuilder;
         }
 
         private void Start()
@@ -49,6 +52,7 @@ namespace cameras
                 var mouseDelta = _inputService.GetMouseDelta();
                 var direction = new Vector3(-mouseDelta.x, 0, -mouseDelta.y);
                 _target.position += direction * _dragSpeed * Time.deltaTime;
+                ClampCameraPosition();
             }
         }
 
@@ -72,6 +76,17 @@ namespace cameras
 
             // Update the follow offset with new Y value
             transposer.m_FollowOffset = new Vector3(currentOffset.x, newY, currentOffset.z);
+        }
+
+        private void ClampCameraPosition()
+        {
+            var mapData = _levelBuilder.MapData;
+            if (mapData == null) return;
+
+            var pos = _target.position;
+            pos.x = Mathf.Clamp(pos.x, 0f, (mapData.Width - 1) * mapData.BlockSize);
+            pos.z = Mathf.Clamp(pos.z, -(mapData.Height - 1) * mapData.BlockSize, 0f);
+            _target.position = pos;
         }
     }
 }

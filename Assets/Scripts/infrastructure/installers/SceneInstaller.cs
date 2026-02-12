@@ -5,9 +5,13 @@ using infrastructure.services.abilityService;
 using infrastructure.services.combatService;
 using infrastructure.services.effectService;
 using infrastructure.services.gameStateService;
+using infrastructure.services.projectileService;
 using infrastructure.services.inputService;
 using infrastructure.services.pathService;
 using infrastructure.services.playerService;
+using infrastructure.services.saveService;
+using infrastructure.services.selectionService;
+using infrastructure.services.timerService;
 using infrastructure.services.towerService;
 using infrastructure.services.waveService;
 using level.builder;
@@ -20,12 +24,17 @@ namespace infrastructure.installers
     {
         public override void InstallBindings()
         {
+            Pool.Initialize(Container);
+
             // Bind simple dependencies first (no constructor dependencies)
             BindInputActions();
             BindPathService();
             BindTowerService();
             BindPlayerService();
             BindCombatService();
+            BindProjectileService();
+            BindTimerService();
+            BindSelectionService();
 
             // Bind Effect and Ability services
             BindEffectService();      // Depends on: IUpdateService (from Bootstrap), ICombatService
@@ -45,11 +54,17 @@ namespace infrastructure.installers
             // Bind WaveService (depends on IEnemyFactory, ILevelBuilder, IPlayerService)
             BindWaveService();
 
+            // Bind SaveService (depends on IPlayerService, IWaveService, ILevelBuilder)
+            BindSaveService();
+
             // Bind GameStateService (depends on IPathService, IWaveService, ILevelBuilder)
             BindGameStateService();
 
             // Bind PathDrawer (depends on IPathService, IInputService)
             BindPathDrawer();
+
+            // Bind RangeCircleManager (depends on ISelectionService)
+            BindRangeCircleManager();
 
             // Initialize circular dependency: LevelBuilder needs IGameStateService
             InitializeCircularDependencies();
@@ -60,7 +75,74 @@ namespace infrastructure.installers
             // Resolve and initialize LevelBuilder with GameStateService
             var levelBuilder = Container.Resolve<ILevelBuilder>();
             var gameStateService = Container.Resolve<IGameStateService>();
+            var saveService = Container.Resolve<ISaveService>();
+            var playerService = Container.Resolve<IPlayerService>();
+            var waveService = Container.Resolve<IWaveService>();
+            var pathService = Container.Resolve<IPathService>();
+
             levelBuilder.Initialize(gameStateService);
+
+            // Automatically build the map when scene loads
+            levelBuilder.Build();
+
+            // Setup auto-save: subscribe to wave completion event
+            waveService.OnWaveComplete += () =>
+            {
+                UnityEngine.Debug.Log("Wave complete - triggering auto-save");
+                saveService.SaveGame();
+            };
+
+            // Try to load saved game
+            if (saveService.TryLoadGame(out GameSaveData saveData))
+            {
+                UnityEngine.Debug.Log($"Loading saved game: Wave {saveData.lastCompletedWave}");
+
+                // Restore player data
+                playerService.LoadPlayerData(
+                    saveData.playerData.playerLevel,
+                    saveData.playerData.currentXP,
+                    saveData.playerData.lives,
+                    saveData.playerData.gold
+                );
+
+                // Restore wave number
+                waveService.SetWaveNumber(saveData.lastCompletedWave);
+
+                // Restore towers
+                if (saveData.placedTowers != null)
+                {
+                    foreach (var towerData in saveData.placedTowers)
+                    {
+                        // Validate grid bounds
+                        if (towerData.gridX >= 0 && towerData.gridX < levelBuilder.MapData.Width &&
+                            towerData.gridY >= 0 && towerData.gridY < levelBuilder.MapData.Height)
+                        {
+                            levelBuilder.RestoreTower(towerData.towerType, towerData.level, towerData.gridX, towerData.gridY);
+                        }
+                        else
+                        {
+                            UnityEngine.Debug.LogWarning($"Invalid tower position in save data: ({towerData.gridX}, {towerData.gridY})");
+                        }
+                    }
+
+                    // Validate path after restoring all towers
+                    var path = pathService.FindPath(levelBuilder.MapData, levelBuilder.TowerMap);
+                    if (path == null)
+                    {
+                        UnityEngine.Debug.LogError("Loaded tower configuration blocks enemy path! Starting fresh game.");
+                        saveService.DeleteSave();
+                        // Towers are already placed, but game will be unplayable - should reload scene ideally
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.Log($"Game loaded successfully: {saveData.placedTowers.Count} towers restored");
+                    }
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.Log("No save found, starting new game");
+            }
         }
 
         private void BindPathDrawer()
@@ -129,6 +211,11 @@ namespace infrastructure.installers
             Container.Bind<IPlayerService>().To<PlayerService>().AsSingle().NonLazy();
         }
 
+        private void BindProjectileService()
+        {
+            Container.Bind<IProjectileService>().To<ProjectileService>().AsSingle();
+        }
+
         private void BindEffectService()
         {
             Container.Bind<IEffectService>().To<EffectService>().AsSingle().NonLazy();
@@ -137,6 +224,26 @@ namespace infrastructure.installers
         private void BindAbilityService()
         {
             Container.Bind<IAbilityService>().To<AbilityService>().AsSingle().NonLazy();
+        }
+
+        private void BindTimerService()
+        {
+            Container.Bind<ITimerService>().To<TimerService>().AsSingle().NonLazy();
+        }
+
+        private void BindSaveService()
+        {
+            Container.Bind<ISaveService>().To<SaveService>().AsSingle();
+        }
+
+        private void BindSelectionService()
+        {
+            Container.Bind<ISelectionService>().To<SelectionService>().AsSingle().NonLazy();
+        }
+
+        private void BindRangeCircleManager()
+        {
+            Container.BindInterfacesTo<RangeCircleManager>().AsSingle().NonLazy();
         }
     }
 }

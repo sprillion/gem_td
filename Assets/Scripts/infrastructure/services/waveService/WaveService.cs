@@ -22,10 +22,16 @@ namespace infrastructure.services.waveService
         private int _currentWaveNumber = 0;
         private HashSet<Enemy> _livingEnemies = new HashSet<Enemy>();
         private bool _waveInProgress = false;
+        private float _waveStartTime = 0f;
 
         public int CurrentWaveNumber => _currentWaveNumber;
+        public int LivingEnemyCount => _livingEnemies.Count;
+        public float WaveElapsedTime => _waveInProgress ? Time.time - _waveStartTime : 0f;
+        public bool IsWaveInProgress => _waveInProgress;
 
         public event Action OnWaveComplete;
+        public event Action OnWaveStarted;
+        public event Action<int> OnEnemyCountChanged;
 
         [Inject]
         public WaveService(IEnemyFactory enemyFactory, IResourceProvider resourceProvider, ILevelBuilder levelBuilder, IPlayerService playerService)
@@ -46,9 +52,12 @@ namespace infrastructure.services.waveService
 
             _currentWaveNumber++;
             _waveInProgress = true;
+            _waveStartTime = Time.time;
             _livingEnemies.Clear();
 
             Debug.Log($"Starting wave {_currentWaveNumber}");
+            OnWaveStarted?.Invoke();
+            OnEnemyCountChanged?.Invoke(0);
 
             // Load wave configuration
             WaveConfigData config = LoadWaveConfig(_currentWaveNumber);
@@ -92,9 +101,10 @@ namespace infrastructure.services.waveService
                 if (enemy != null)
                 {
                     _livingEnemies.Add(enemy);
+                    OnEnemyCountChanged?.Invoke(_livingEnemies.Count);
 
                     // Subscribe to enemy events
-                    enemy.OnDeath += () => RegisterEnemyDeath(enemy);
+                    enemy.OnDeath += RegisterEnemyDeath;
                     enemy.OnReachedEnd += () => RegisterEnemyReachedEnd(enemy);
 
                     Debug.Log($"Spawned enemy {i + 1}/{config.EnemyCount}");
@@ -112,6 +122,8 @@ namespace infrastructure.services.waveService
             if (_livingEnemies.Remove(enemy))
             {
                 Debug.Log($"Enemy died. Remaining: {_livingEnemies.Count}");
+                _playerService.AddGold(enemy.GoldReward);
+                OnEnemyCountChanged?.Invoke(_livingEnemies.Count);
                 CheckWaveCompletion();
             }
         }
@@ -122,6 +134,7 @@ namespace infrastructure.services.waveService
             {
                 Debug.Log($"Enemy reached end. Remaining: {_livingEnemies.Count}");
                 _playerService.LoseLife(1);
+                OnEnemyCountChanged?.Invoke(_livingEnemies.Count);
                 CheckWaveCompletion();
             }
         }
@@ -144,6 +157,12 @@ namespace infrastructure.services.waveService
             _playerService.AwardExperience(xpReward);
 
             OnWaveComplete?.Invoke();
+        }
+
+        public void SetWaveNumber(int waveNumber)
+        {
+            _currentWaveNumber = waveNumber;
+            Debug.Log($"Wave number set to {_currentWaveNumber}");
         }
 
         private WaveConfigData LoadWaveConfig(int waveNumber)

@@ -15,7 +15,7 @@ MonoBehaviour:
   TowerType: 3
   Level: 1
   Damage: 1
-  AttackSpeed: 10
+  AttackSpeed: 4
   AttackRange: 10
   Abilities:
   - {fileID: 11400000, guid: c60054e24cd966443a9e452fe54e566d, type: 2}

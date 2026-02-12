@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using enemies;
 using infrastructure.services.resourceProvider;
+using ui.healthBar;
 using UnityEngine;
 using Zenject;
 
@@ -10,11 +11,13 @@ namespace infrastructure.factories.enemies
     {
         private const string EnemyPrefabPath = "Prefabs/Enemies/Enemy";
         private const string EnemyModelPathFormat = "Prefabs/Enemies/Models/Enemy_{0}";
+        private const string HealthBarPrefabPath = "Prefabs/UI/HealthBar";
 
         private readonly DiContainer _diContainer;
         private readonly IResourceProvider _resourceProvider;
 
         private GameObject _enemyPrefab;
+        private GameObject _healthBarPrefab;
         private readonly Dictionary<int, GameObject> _enemyModels = new Dictionary<int, GameObject>();
 
         [Inject]
@@ -23,6 +26,7 @@ namespace infrastructure.factories.enemies
             _diContainer = diContainer;
             _resourceProvider = resourceProvider;
             LoadEnemyPrefab();
+            LoadHealthBarPrefab();
         }
 
         public Enemy CreateEnemy(EnemyData enemyData, Vector3 position, int waveNumber)
@@ -42,6 +46,9 @@ namespace infrastructure.factories.enemies
             // Add visual model based on wave number
             CreateEnemyModel(enemy, waveNumber);
 
+            // Create health bar
+            CreateHealthBar(enemy);
+
             return enemy;
         }
 
@@ -57,6 +64,23 @@ namespace infrastructure.factories.enemies
 
             GameObject model = Object.Instantiate(modelPrefab, enemy.transform);
             model.transform.localPosition = Vector3.zero;
+        }
+
+        private void CreateHealthBar(Enemy enemy)
+        {
+            if (_healthBarPrefab == null)
+            {
+                Debug.LogWarning("Health bar prefab not loaded, enemy will have no health bar");
+                return;
+            }
+
+            GameObject healthBarObj = Object.Instantiate(_healthBarPrefab);
+            HealthBar healthBar = healthBarObj.GetComponent<HealthBar>();
+
+            if (healthBar != null)
+            {
+                enemy.SetHealthBar(healthBar);
+            }
         }
 
         private GameObject LoadEnemyModel(int waveNumber)
@@ -91,6 +115,16 @@ namespace infrastructure.factories.enemies
             if (_enemyPrefab == null)
             {
                 Debug.LogError($"Failed to load enemy prefab at {EnemyPrefabPath}");
+            }
+        }
+
+        private void LoadHealthBarPrefab()
+        {
+            _healthBarPrefab = _resourceProvider.Load<GameObject>(HealthBarPrefabPath);
+
+            if (_healthBarPrefab == null)
+            {
+                Debug.LogError($"Failed to load health bar prefab at {HealthBarPrefabPath}");
             }
         }
     }

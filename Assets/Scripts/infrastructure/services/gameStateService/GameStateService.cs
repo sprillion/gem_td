@@ -51,6 +51,7 @@ namespace infrastructure.services.gameStateService
             if (_placedTowersThisRound.Count >= 5)
             {
                 TransitionToPhase(GamePhase.SELECTING_TOWER);
+                EnableTowerHighlights();
             }
         }
 
@@ -69,6 +70,9 @@ namespace infrastructure.services.gameStateService
             }
 
             Debug.Log("Tower selected, converting others to stone");
+
+            // Disable highlights first
+            DisableTowerHighlights();
 
             // Convert all non-selected towers to stone
             foreach (var tower in _placedTowersThisRound)
@@ -133,6 +137,30 @@ namespace infrastructure.services.gameStateService
         private void OnWaveComplete()
         {
             EndWave();
+        }
+
+        private void EnableTowerHighlights()
+        {
+            Debug.Log("Enabling tower highlights for selection");
+            foreach (var tower in _placedTowersThisRound)
+            {
+                if (tower != null)
+                {
+                    tower.SetHighlight(true);
+                }
+            }
+        }
+
+        private void DisableTowerHighlights()
+        {
+            Debug.Log("Disabling tower highlights");
+            foreach (var tower in _placedTowersThisRound)
+            {
+                if (tower != null)
+                {
+                    tower.SetHighlight(false);
+                }
+            }
         }
 
         private void TransitionToPhase(GamePhase newPhase)

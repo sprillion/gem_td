@@ -6,6 +6,21 @@ namespace towers.abilities.effects
     public class ArmorReductionEffect : Effect
     {
         private readonly int _armorReduction;
+        private static Sprite _cachedIcon;
+
+        public override string DisplayName => "Armor Break";
+        public override string Description => $"Armor reduced by {_armorReduction}";
+        public override Sprite Icon
+        {
+            get
+            {
+                if (_cachedIcon == null)
+                {
+                    _cachedIcon = Resources.Load<Sprite>("Icons/Effects/ArmorReduction");
+                }
+                return _cachedIcon;
+            }
+        }
 
         public ArmorReductionEffect(float duration, int armorReduction) : base(duration)
         {

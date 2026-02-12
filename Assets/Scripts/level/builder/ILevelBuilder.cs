@@ -11,5 +11,7 @@ namespace level.builder
         Tower CreateTower(int x, int y);
         void SetTowerType(int x, int y, TowerType towerType);
         void Initialize(IGameStateService gameStateService);
+        Tower GetTowerAtPosition(int x, int y);
+        void RestoreTower(TowerType towerType, int level, int x, int y);
     }
 }

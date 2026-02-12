@@ -8,6 +8,21 @@ namespace towers.abilities.effects
         private readonly int _damagePerTick;
         private readonly float _tickInterval;
         private float _timeSinceLastTick;
+        private static Sprite _cachedIcon;
+
+        public override string DisplayName => "Poison";
+        public override string Description => $"{_damagePerTick} damage every {_tickInterval:F1}s";
+        public override Sprite Icon
+        {
+            get
+            {
+                if (_cachedIcon == null)
+                {
+                    _cachedIcon = Resources.Load<Sprite>("Icons/Effects/Poison");
+                }
+                return _cachedIcon;
+            }
+        }
 
         public PoisonEffect(float duration, int damagePerTick, float tickInterval) : base(duration)
         {

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace towers.abilities.effects
 {
@@ -8,6 +9,12 @@ namespace towers.abilities.effects
         public float Duration { get; protected set; }
         public float ElapsedTime { get; protected set; }
         public bool IsExpired => ElapsedTime >= Duration;
+        public float RemainingDuration => Mathf.Max(0f, Duration - ElapsedTime);
+
+        // Display properties for UI
+        public abstract string DisplayName { get; }
+        public abstract string Description { get; }
+        public abstract Sprite Icon { get; }
 
         protected Effect(float duration)
         {
