@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using infrastructure.services.selectionService;
 using infrastructure.services.updateService;
-using towers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Zenject;
 
@@ -56,26 +57,6 @@ namespace infrastructure.services.inputService
                 var mouseDelta = GetMouseDelta();
                 _totalMouseMovement += mouseDelta.magnitude;
             }
-
-            // Check hover for range circle preview
-            CheckHover();
-        }
-
-        private void CheckHover()
-        {
-            var ray = _camera.ScreenPointToRay(Mouse.current.position.value);
-            var isHit = Physics.Raycast(ray, out var raycastHit, Mathf.Infinity,
-                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-
-            if (isHit && raycastHit.collider.transform.parent != null &&
-                raycastHit.collider.transform.parent.TryGetComponent(out Tower tower))
-            {
-                _selectionService.SetHoveredTower(tower);
-            }
-            else
-            {
-                _selectionService.ClearHover();
-            }
         }
 
         private void OnMouseClickStart(InputAction.CallbackContext context)
@@ -101,18 +82,35 @@ namespace infrastructure.services.inputService
 
         private void ClickOnClickableObject()
         {
+            if (IsPointerOverUI())
+                return;
+
             var ray = _camera.ScreenPointToRay(Mouse.current.position.value);
             var isHit = Physics.Raycast(ray, out var raycastHit, Mathf.Infinity, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
 
             if (!isHit || raycastHit.collider.transform.parent == null ||
                 !raycastHit.collider.transform.parent.TryGetComponent(out IClickable clickable))
             {
-                // Clicked on empty space - clear selection
                 _selectionService.ClearSelection();
                 return;
             }
 
+            _selectionService.ClearSelection();
             clickable.OnClick();
+        }
+
+        private bool IsPointerOverUI()
+        {
+            if (EventSystem.current == null)
+                return false;
+
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Mouse.current.position.ReadValue()
+            };
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+            return results.Count > 0;
         }
 
         public Vector2 GetMouseDelta()

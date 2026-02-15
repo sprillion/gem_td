@@ -12,6 +12,7 @@ namespace infrastructure.services.gameStateService
 
         void RegisterTowerPlacement(Tower tower);
         void SelectTower(Tower selectedTower);
+        bool IsPlacedThisRound(Tower tower);
         void StartWave();
         void EndWave();
     }

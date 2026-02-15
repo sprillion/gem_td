@@ -82,14 +82,7 @@ namespace towers
 
         public void OnClick()
         {
-            // Special handling for SELECTING_TOWER phase (game flow)
-            if (_gameStateService.CurrentPhase == GamePhase.SELECTING_TOWER)
-            {
-                _gameStateService.SelectTower(this);
-                return;
-            }
-
-            // For all other phases, use SelectionService (info panel)
+            // Always use SelectionService to open info panel
             _selectionService?.SelectTower(this);
         }
 

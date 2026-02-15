@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using enemies;
 using infrastructure.services.effectService;
+using infrastructure.services.gameStateService;
 using infrastructure.services.selectionService;
 using infrastructure.services.updateService;
 using TMPro;
@@ -28,6 +29,9 @@ namespace ui.selection
         [SerializeField] private Transform _abilitiesContainer;
         [SerializeField] private GameObject _abilityItemPrefab;
 
+        [Header("Select Tower Button")]
+        [SerializeField] private Button _selectTowerButton;
+
         [Header("Enemy Info")]
         [SerializeField] private Image _enemyIcon;
         [SerializeField] private TMP_Text _enemyName;
@@ -44,27 +48,33 @@ namespace ui.selection
         private ISelectionService _selectionService;
         private IEffectService _effectService;
         private IUpdateService _updateService;
+        private IGameStateService _gameStateService;
 
         private List<GameObject> _activeAbilityItems = new List<GameObject>();
         private List<GameObject> _activeEffectItems = new List<GameObject>();
 
+        private Tower _currentTower;
+
         [Inject]
-        public void Construct(ISelectionService selectionService, IEffectService effectService, IUpdateService updateService)
+        public void Construct(ISelectionService selectionService, IEffectService effectService,
+            IUpdateService updateService, IGameStateService gameStateService)
         {
             _selectionService = selectionService;
             _effectService = effectService;
             _updateService = updateService;
-        }
+            _gameStateService = gameStateService;
 
-        private void Start()
-        {
             _selectionService.OnTowerSelected += HandleTowerSelected;
             _selectionService.OnEnemySelected += HandleEnemySelected;
             _selectionService.OnSelectionCleared += HandleSelectionCleared;
-
             _updateService.OnUpdate += OnUpdate;
 
-            ShowEmptyPanel();
+            if (_selectTowerButton != null)
+            {
+                _selectTowerButton.onClick.AddListener(OnSelectTowerClicked);
+            }
+
+            gameObject.SetActive(false);
         }
 
         private void OnDestroy()
@@ -80,11 +90,15 @@ namespace ui.selection
             {
                 _updateService.OnUpdate -= OnUpdate;
             }
+
+            if (_selectTowerButton != null)
+            {
+                _selectTowerButton.onClick.RemoveListener(OnSelectTowerClicked);
+            }
         }
 
         private void OnUpdate()
         {
-            // Real-time update for enemy info
             if (_selectionService.CurrentSelectionType == SelectionType.Enemy && _selectionService.SelectedEnemy != null)
             {
                 UpdateEnemyHealth();
@@ -94,17 +108,32 @@ namespace ui.selection
 
         private void HandleTowerSelected(Tower tower)
         {
+            gameObject.SetActive(true);
+            _currentTower = tower;
             ShowTowerPanel(tower);
         }
 
         private void HandleEnemySelected(Enemy enemy)
         {
+            gameObject.SetActive(true);
+            _currentTower = null;
             ShowEnemyPanel(enemy);
         }
 
         private void HandleSelectionCleared()
         {
-            ShowEmptyPanel();
+            _currentTower = null;
+            gameObject.SetActive(false);
+        }
+
+        private void OnSelectTowerClicked()
+        {
+            if (_currentTower == null) return;
+            if (_gameStateService.CurrentPhase != GamePhase.SELECTING_TOWER) return;
+            if (!_gameStateService.IsPlacedThisRound(_currentTower)) return;
+
+            _gameStateService.SelectTower(_currentTower);
+            _selectionService.ClearSelection();
         }
 
         private void ShowTowerPanel(Tower tower)
@@ -113,7 +142,7 @@ namespace ui.selection
 
             _towerPanel.SetActive(true);
             _enemyPanel.SetActive(false);
-            _emptyPanel.SetActive(false);
+            if (_emptyPanel != null) _emptyPanel.SetActive(false);
 
             PopulateTowerInfo(tower);
         }
@@ -124,23 +153,15 @@ namespace ui.selection
 
             _towerPanel.SetActive(false);
             _enemyPanel.SetActive(true);
-            _emptyPanel.SetActive(false);
+            if (_emptyPanel != null) _emptyPanel.SetActive(false);
 
             PopulateEnemyInfo(enemy);
-        }
-
-        private void ShowEmptyPanel()
-        {
-            _towerPanel.SetActive(false);
-            _enemyPanel.SetActive(false);
-            _emptyPanel.SetActive(true);
         }
 
         private void PopulateTowerInfo(Tower tower)
         {
             var data = tower.TowerData;
 
-            // Icon
             if (_towerIcon != null && data.Icon != null)
             {
                 _towerIcon.sprite = data.Icon;
@@ -151,19 +172,16 @@ namespace ui.selection
                 _towerIcon.enabled = false;
             }
 
-            // Name
             if (_towerName != null)
             {
                 _towerName.text = GetTowerDisplayName(data.TowerType);
             }
 
-            // Level
             if (_towerLevel != null)
             {
                 _towerLevel.text = $"Level {data.Level + 1}";
             }
 
-            // Stats
             if (_towerDamage != null)
             {
                 _towerDamage.text = $"Damage: {data.Damage}";
@@ -188,13 +206,24 @@ namespace ui.selection
                     CreateAbilityItem(ability, data.Level);
                 }
             }
+
+            // Select button: only visible during SELECTING_TOWER for towers placed this round
+            UpdateSelectButton(tower);
+        }
+
+        private void UpdateSelectButton(Tower tower)
+        {
+            if (_selectTowerButton == null) return;
+
+            bool showButton = _gameStateService.CurrentPhase == GamePhase.SELECTING_TOWER
+                              && _gameStateService.IsPlacedThisRound(tower);
+            _selectTowerButton.gameObject.SetActive(showButton);
         }
 
         private void PopulateEnemyInfo(Enemy enemy)
         {
             var data = enemy.EnemyData;
 
-            // Icon
             if (_enemyIcon != null && data.Icon != null)
             {
                 _enemyIcon.sprite = data.Icon;
@@ -205,16 +234,13 @@ namespace ui.selection
                 _enemyIcon.enabled = false;
             }
 
-            // Name
             if (_enemyName != null)
             {
                 _enemyName.text = enemy.name;
             }
 
-            // Health
             UpdateEnemyHealth();
 
-            // Stats (use current modifiers)
             if (_enemyDamage != null)
             {
                 _enemyDamage.text = $"Damage: {data.Damage}";
@@ -240,7 +266,6 @@ namespace ui.selection
                 _enemyEvasion.text = $"Evasion: {data.Evasion}%";
             }
 
-            // Effects
             UpdateEnemyEffects();
         }
 

@@ -122,6 +122,11 @@ namespace infrastructure.services.gameStateService
             Debug.Log($"Tower at ({x}, {y}) converted to stone");
         }
 
+        public bool IsPlacedThisRound(Tower tower)
+        {
+            return _placedTowersThisRound.Contains(tower);
+        }
+
         public void StartWave()
         {
             TransitionToPhase(GamePhase.COMBAT);

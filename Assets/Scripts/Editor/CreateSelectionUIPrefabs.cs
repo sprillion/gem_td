@@ -311,6 +311,30 @@ namespace Editor
             var abilitiesLE = abilitiesContainer.AddComponent<LayoutElement>();
             abilitiesLE.flexibleHeight = 1;
 
+            // --- Select Tower Button ---
+            var selectBtnGO = CreateUIObject("SelectTowerButton", towerPanel.transform);
+            var selectBtnImage = selectBtnGO.AddComponent<Image>();
+            selectBtnImage.color = new Color(0.15f, 0.6f, 0.15f, 1f);
+            var selectBtn = selectBtnGO.AddComponent<Button>();
+            selectBtn.targetGraphic = selectBtnImage;
+            var selectBtnLE = selectBtnGO.AddComponent<LayoutElement>();
+            selectBtnLE.preferredHeight = 45;
+            selectBtnLE.minHeight = 45;
+
+            var selectBtnTextGO = CreateUIObject("Text", selectBtnGO.transform);
+            var selectBtnTextRect = selectBtnTextGO.GetComponent<RectTransform>();
+            selectBtnTextRect.anchorMin = Vector2.zero;
+            selectBtnTextRect.anchorMax = Vector2.one;
+            selectBtnTextRect.offsetMin = Vector2.zero;
+            selectBtnTextRect.offsetMax = Vector2.zero;
+            var selectBtnText = selectBtnTextGO.AddComponent<TextMeshProUGUI>();
+            selectBtnText.text = "SELECT";
+            selectBtnText.fontSize = 20;
+            selectBtnText.fontStyle = FontStyles.Bold;
+            selectBtnText.color = Color.white;
+            selectBtnText.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            selectBtnText.verticalAlignment = VerticalAlignmentOptions.Middle;
+
             // ==================== ENEMY PANEL ====================
             var enemyPanel = CreateUIObject("EnemyPanel", root.transform);
             var enemyVL = enemyPanel.AddComponent<VerticalLayoutGroup>();
@@ -492,6 +516,7 @@ namespace Editor
             so.FindProperty("_towerAttackRange").objectReferenceValue = towerRangeText;
             so.FindProperty("_abilitiesContainer").objectReferenceValue = abilitiesContainer.transform;
             so.FindProperty("_abilityItemPrefab").objectReferenceValue = abilityPrefab;
+            so.FindProperty("_selectTowerButton").objectReferenceValue = selectBtn;
 
             // Enemy info
             so.FindProperty("_enemyIcon").objectReferenceValue = enemyIconImage;
@@ -511,6 +536,9 @@ namespace Editor
             // Deactivate panels that should start hidden
             enemyPanel.SetActive(false);
             towerPanel.SetActive(false);
+
+            // Start with the whole panel hidden
+            root.SetActive(false);
 
             // Save prefab
             string path = $"{PrefabDir}/SelectionInfoPanel.prefab";
