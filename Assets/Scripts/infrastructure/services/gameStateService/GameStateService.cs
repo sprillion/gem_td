@@ -17,7 +17,7 @@ namespace infrastructure.services.gameStateService
         private readonly ITowerFactory _towerFactory;
         private ILevelBuilder _levelBuilder;
 
-        private GamePhase _currentPhase = GamePhase.PLACING_TOWERS;
+        private GamePhase _currentPhase = GamePhase.SKILL_SELECTION;
         private List<Tower> _placedTowersThisRound = new List<Tower>();
 
         public GamePhase CurrentPhase => _currentPhase;
@@ -26,16 +26,22 @@ namespace infrastructure.services.gameStateService
         public event Action<GamePhase> OnPhaseChanged;
 
         [Inject]
-        public GameStateService(IPathService pathService, IWaveService waveService, ILevelBuilder levelBuilder, ITowerFactory towerFactory)
+        public GameStateService(IPathService pathService, IWaveService waveService, ITowerFactory towerFactory)
         {
             _pathService = pathService;
             _waveService = waveService;
-            _levelBuilder = levelBuilder;
             _towerFactory = towerFactory;
 
             // Subscribe to wave completion
             _waveService.OnWaveComplete += OnWaveComplete;
         }
+
+        public void Initialize(ILevelBuilder levelBuilder)
+        {
+            _levelBuilder = levelBuilder;
+        }
+
+        public void StartGame() => TransitionToPhase(GamePhase.PLACING_TOWERS);
 
         public void RegisterTowerPlacement(Tower tower)
         {

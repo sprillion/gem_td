@@ -70,7 +70,7 @@ namespace infrastructure.services.abilityService
             if (primaryTarget == null || !primaryTarget.IsAlive)
                 return targets;
 
-            int baseDamage = tower.TowerData.Damage;
+            int baseDamage = tower.EffectiveDamage;
             int primaryDamage = baseDamage;
             int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 3);
 
@@ -209,7 +209,7 @@ namespace infrastructure.services.abilityService
 
             float splashRadius = ability.SplashRadiusByLevel[level];
             float splashPercent = ability.SplashDamagePercentByLevel[level];
-            int splashDamage = Mathf.RoundToInt(tower.TowerData.Damage * (splashPercent / 100f));
+            int splashDamage = Mathf.RoundToInt(tower.EffectiveDamage * (splashPercent / 100f));
 
             // Find enemies near primary target
             foreach (var enemy in enemiesInRange)
@@ -242,8 +242,8 @@ namespace infrastructure.services.abilityService
             // Deal full damage to each additional target
             foreach (var enemy in otherEnemies)
             {
-                _combatService.DealDamage(enemy, tower.TowerData.Damage);
-                Debug.Log($"Tower {tower.TowerData.TowerType} multi-target damage {tower.TowerData.Damage} to {enemy.name}");
+                _combatService.DealDamage(enemy, tower.EffectiveDamage);
+                Debug.Log($"Tower {tower.TowerData.TowerType} multi-target damage {tower.EffectiveDamage} to {enemy.name}");
             }
 
             Debug.Log($"Tower {tower.TowerData.TowerType} hit {otherEnemies.Count + 1}/{totalTargets} targets");

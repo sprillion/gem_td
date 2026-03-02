@@ -34,12 +34,16 @@ namespace infrastructure.services.waveService
         public event Action<int> OnEnemyCountChanged;
 
         [Inject]
-        public WaveService(IEnemyFactory enemyFactory, IResourceProvider resourceProvider, ILevelBuilder levelBuilder, IPlayerService playerService)
+        public WaveService(IEnemyFactory enemyFactory, IResourceProvider resourceProvider, IPlayerService playerService)
         {
             _enemyFactory = enemyFactory;
             _resourceProvider = resourceProvider;
-            _levelBuilder = levelBuilder;
             _playerService = playerService;
+        }
+
+        public void Initialize(ILevelBuilder levelBuilder)
+        {
+            _levelBuilder = levelBuilder;
         }
 
         public async void StartWave()

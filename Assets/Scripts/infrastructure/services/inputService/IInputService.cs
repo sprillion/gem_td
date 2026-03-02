@@ -7,6 +7,7 @@ namespace infrastructure.services.inputService
     {
         event Action OnSpacePressed;
         event Action OnPPressed;
+        event Action<int> OnSkillKeyPressed;
         Vector2 MousePosition();
         Vector2 GetMouseDelta();
         Vector2 GetMouseScroll();

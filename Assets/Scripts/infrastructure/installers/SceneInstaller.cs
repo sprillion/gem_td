@@ -10,18 +10,23 @@ using infrastructure.services.inputService;
 using infrastructure.services.pathService;
 using infrastructure.services.playerService;
 using infrastructure.services.saveService;
+using infrastructure.services.playerSkillService;
 using infrastructure.services.selectionService;
 using infrastructure.services.timerService;
 using infrastructure.services.towerService;
 using infrastructure.services.waveService;
+using skills;
 using level.builder;
 using level.path;
+using ui.skillSelection;
+using UnityEngine;
 using Zenject;
 
 namespace infrastructure.installers
 {
     public class SceneInstaller : MonoInstaller
     {
+        [SerializeField] private SkillSelectionView _skillSelectionView;
         public override void InstallBindings()
         {
             Pool.Initialize(Container);
@@ -35,6 +40,7 @@ namespace infrastructure.installers
             BindProjectileService();
             BindTimerService();
             BindSelectionService();
+            BindPlayerSkillService();
 
             // Bind Effect and Ability services
             BindEffectService();      // Depends on: IUpdateService (from Bootstrap), ICombatService
@@ -79,8 +85,12 @@ namespace infrastructure.installers
             var playerService = Container.Resolve<IPlayerService>();
             var waveService = Container.Resolve<IWaveService>();
             var pathService = Container.Resolve<IPathService>();
+            var playerSkillService = Container.Resolve<IPlayerSkillService>() as PlayerSkillService;
 
-            levelBuilder.Initialize(gameStateService);
+            gameStateService.Initialize(levelBuilder);
+            waveService.Initialize(levelBuilder);
+            levelBuilder.Initialize(gameStateService, Container.Resolve<IPlayerSkillService>());
+            playerSkillService?.Initialize(levelBuilder);
 
             // Automatically build the map when scene loads
             levelBuilder.Build();
@@ -91,6 +101,11 @@ namespace infrastructure.installers
                 UnityEngine.Debug.Log("Wave complete - triggering auto-save");
                 saveService.SaveGame();
             };
+
+            // Load all skills and set them as available for selection
+            var skillService = Container.Resolve<IPlayerSkillService>();
+            var allSkills = UnityEngine.Resources.LoadAll<PlayerSkillData>("ScriptableObjects/Skills");
+            skillService.SetAvailableSkills(new System.Collections.Generic.List<PlayerSkillData>(allSkills));
 
             // Try to load saved game
             if (saveService.TryLoadGame(out GameSaveData saveData))
@@ -138,10 +153,17 @@ namespace infrastructure.installers
                         UnityEngine.Debug.Log($"Game loaded successfully: {saveData.placedTowers.Count} towers restored");
                     }
                 }
+
+                // Save game found: auto-equip first 4 skills and skip skill selection
+                for (int i = 0; i < UnityEngine.Mathf.Min(4, allSkills.Length); i++)
+                    skillService.EquipSkill(i, allSkills[i], 0);
+                gameStateService.StartGame();
             }
             else
             {
-                UnityEngine.Debug.Log("No save found, starting new game");
+                UnityEngine.Debug.Log("No save found, starting new game with skill selection");
+                // Activate the skill selection screen — its Start() will populate skills
+                _skillSelectionView?.Show();
             }
         }
 
@@ -239,6 +261,11 @@ namespace infrastructure.installers
         private void BindSelectionService()
         {
             Container.Bind<ISelectionService>().To<SelectionService>().AsSingle().NonLazy();
+        }
+
+        private void BindPlayerSkillService()
+        {
+            Container.Bind<IPlayerSkillService>().To<PlayerSkillService>().AsSingle();
         }
 
         private void BindRangeCircleManager()

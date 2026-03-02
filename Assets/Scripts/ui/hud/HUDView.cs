@@ -152,37 +152,37 @@ namespace ui.hud
         private void UpdateLevelText()
         {
             if (_levelText != null)
-                _levelText.text = $"Level: {_playerService.PlayerLevel}";
+                _levelText.text = $"{_playerService.PlayerLevel}";
         }
 
         private void UpdateXPText()
         {
             if (_xpText != null)
-                _xpText.text = $"XP: {_playerService.CurrentXP}/{_playerService.XPForNextLevel}";
+                _xpText.text = $"{_playerService.CurrentXP}/{_playerService.XPForNextLevel}";
         }
 
         private void UpdateGoldText()
         {
             if (_goldText != null)
-                _goldText.text = $"Gold: {_playerService.Gold}";
+                _goldText.text = $"{_playerService.Gold}";
         }
 
         private void UpdateLivesText()
         {
             if (_livesText != null)
-                _livesText.text = $"Lives: {_playerService.Lives}";
+                _livesText.text = $"{_playerService.Lives}";
         }
 
         private void UpdateTotalTimeText()
         {
             if (_totalTimeText != null)
-                _totalTimeText.text = $"Time: {_timerService.FormattedTotalTime}";
+                _totalTimeText.text = $"Время: {_timerService.FormattedTotalTime}";
         }
 
         private void UpdateWaveNumberText()
         {
             if (_waveNumberText != null)
-                _waveNumberText.text = $"Wave: {_waveService.CurrentWaveNumber}";
+                _waveNumberText.text = $"{_waveService.CurrentWaveNumber}";
         }
 
         private void UpdateWaveTimerText()
@@ -192,14 +192,14 @@ namespace ui.hud
                 float elapsed = _waveService.WaveElapsedTime;
                 int minutes = (int)(elapsed / 60f);
                 int seconds = (int)(elapsed % 60f);
-                _waveTimerText.text = $"Wave Time: {minutes:D2}:{seconds:D2}";
+                _waveTimerText.text = $"Время волны: {minutes:D2}:{seconds:D2}";
             }
         }
 
         private void UpdateEnemyCountText()
         {
             if (_enemyCountText != null)
-                _enemyCountText.text = $"Enemies: {_waveService.LivingEnemyCount}";
+                _enemyCountText.text = $"{_waveService.LivingEnemyCount}";
         }
 
         private void UpdatePhaseText()
@@ -208,13 +208,14 @@ namespace ui.hud
             {
                 string phaseName = _gameStateService.CurrentPhase switch
                 {
-                    GamePhase.PLACING_TOWERS => "Placing",
-                    GamePhase.SELECTING_TOWER => "Selecting",
-                    GamePhase.COMBAT => "Combat",
-                    GamePhase.GAME_OVER => "Game Over",
-                    _ => "Unknown"
+                    GamePhase.SKILL_SELECTION => "Выбор способностей",
+                    GamePhase.PLACING_TOWERS => "Установка башни",
+                    GamePhase.SELECTING_TOWER => "Выбор башни",
+                    GamePhase.COMBAT => "Сражение",
+                    GamePhase.GAME_OVER => "Конец игры",
+                    _ => "Неизвестно"
                 };
-                _phaseText.text = $"Phase: {phaseName}";
+                _phaseText.text = $"Фаза: {phaseName}";
             }
         }
     }

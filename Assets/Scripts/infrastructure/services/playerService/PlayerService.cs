@@ -1,19 +1,23 @@
 using System;
+using infrastructure.services.resourceProvider;
 using UnityEngine;
+using Zenject;
 
 namespace infrastructure.services.playerService
 {
     public class PlayerService : IPlayerService
     {
+        private readonly PlayerProgressionData _progressionData;
+
         private int _playerLevel = 1;
         private int _currentXP = 0;
-        private int _lives = 20;
+        private int _lives = 100;
         private int _gold = 0;
 
         public int PlayerLevel => _playerLevel;
         public int Lives => _lives;
         public int CurrentXP => _currentXP;
-        public int XPForNextLevel => _playerLevel * 100;
+        public int XPForNextLevel => GetXPForLevel(_playerLevel);
         public int Gold => _gold;
 
         public event Action<int> OnLevelChanged;
@@ -21,25 +25,48 @@ namespace infrastructure.services.playerService
         public event Action<int> OnGoldChanged;
         public event Action<int> OnLivesChanged;
 
+        [Inject]
+        public PlayerService(IResourceProvider resourceProvider)
+        {
+            _progressionData = resourceProvider.Load<PlayerProgressionData>("ScriptableObjects/PlayerProgression");
+            if (_progressionData == null)
+                Debug.LogWarning("PlayerProgressionData not found at Resources/ScriptableObjects/PlayerProgression. Using defaults.");
+        }
+
+        private int GetXPForLevel(int level)
+        {
+            if (_progressionData == null)
+                return level * 100;
+            int idx = level - 1;
+            return idx < _progressionData.XPPerLevel.Length ? _progressionData.XPPerLevel[idx] : int.MaxValue;
+        }
+
+        public float[] GetTowerLevelBaseWeights()
+        {
+            if (_progressionData == null || _progressionData.TowerLevelWeights == null ||
+                _progressionData.TowerLevelWeights.Length == 0)
+                return new float[] { 0.5f, 0.25f, 0.15f, 0.10f, 0f };
+
+            int idx = Mathf.Clamp(_playerLevel - 1, 0, _progressionData.TowerLevelWeights.Length - 1);
+            return _progressionData.TowerLevelWeights[idx].Weights;
+        }
+
         public int GetRandomTowerLevel()
         {
-            // For now, return a simple weighted random level based on player level
-            // Level 0 is most common, higher levels less common
-            // Formula: weighted by player level
+            var weights = GetTowerLevelBaseWeights();
 
-            float roll = UnityEngine.Random.value;
+            float total = 0f;
+            foreach (var w in weights) total += w;
+            if (total <= 0f) return 0;
 
-            // 50% chance for level 0
-            if (roll < 0.5f) return 0;
-
-            // 25% chance for level 1
-            if (roll < 0.75f) return Mathf.Min(1, _playerLevel);
-
-            // 15% chance for level 2
-            if (roll < 0.9f) return Mathf.Min(2, _playerLevel);
-
-            // 10% chance for higher level
-            return Mathf.Min(3, _playerLevel);
+            float roll = UnityEngine.Random.value * total;
+            float cumulative = 0f;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                cumulative += weights[i];
+                if (roll < cumulative) return i;
+            }
+            return weights.Length - 1;
         }
 
         public void AwardExperience(int xp)
@@ -48,9 +75,8 @@ namespace infrastructure.services.playerService
             Debug.Log($"Awarded {xp} XP. Total: {_currentXP}");
             OnXPChanged?.Invoke(_currentXP);
 
-            // Simple level up: every 100 XP
-            int xpForLevel = _playerLevel * 100;
-            if (_currentXP >= xpForLevel)
+            int xpForLevel = GetXPForLevel(_playerLevel);
+            if (_currentXP >= xpForLevel && xpForLevel != int.MaxValue)
             {
                 _playerLevel++;
                 _currentXP -= xpForLevel;
@@ -67,10 +93,14 @@ namespace infrastructure.services.playerService
             OnLivesChanged?.Invoke(_lives);
 
             if (_lives <= 0)
-            {
                 Debug.Log("Game Over!");
-                // TODO: Trigger game over state
-            }
+        }
+
+        public void AddLives(int amount)
+        {
+            _lives += amount;
+            Debug.Log($"Restored {amount} lives. Lives: {_lives}");
+            OnLivesChanged?.Invoke(_lives);
         }
 
         public void AddGold(int amount)
@@ -89,7 +119,6 @@ namespace infrastructure.services.playerService
 
             Debug.Log($"Player data loaded: Level {_playerLevel}, XP {_currentXP}, Lives {_lives}, Gold {_gold}");
 
-            // Fire events for UI updates
             OnLevelChanged?.Invoke(_playerLevel);
             OnXPChanged?.Invoke(_currentXP);
             OnLivesChanged?.Invoke(_lives);

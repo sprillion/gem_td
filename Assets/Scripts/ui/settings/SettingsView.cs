@@ -7,7 +7,7 @@ namespace ui.settings
     {
         [SerializeField] private Button _backButton;
 
-        public override void Initialize()
+        private void Awake()
         {
             _backButton.onClick.AddListener(Back);
         }

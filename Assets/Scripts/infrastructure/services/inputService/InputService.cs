@@ -26,6 +26,7 @@ namespace infrastructure.services.inputService
 
         public event Action OnSpacePressed;
         public event Action OnPPressed;
+        public event Action<int> OnSkillKeyPressed;
 
         [Inject]
         public InputService(InputActions inputActions, IUpdateService updateService, ISelectionService selectionService)
@@ -57,6 +58,13 @@ namespace infrastructure.services.inputService
                 var mouseDelta = GetMouseDelta();
                 _totalMouseMovement += mouseDelta.magnitude;
             }
+
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            if (kb.digit1Key.wasPressedThisFrame) OnSkillKeyPressed?.Invoke(0);
+            if (kb.digit2Key.wasPressedThisFrame) OnSkillKeyPressed?.Invoke(1);
+            if (kb.digit3Key.wasPressedThisFrame) OnSkillKeyPressed?.Invoke(2);
+            if (kb.digit4Key.wasPressedThisFrame) OnSkillKeyPressed?.Invoke(3);
         }
 
         private void OnMouseClickStart(InputAction.CallbackContext context)

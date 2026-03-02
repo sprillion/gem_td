@@ -50,8 +50,8 @@ namespace ui.selection
         private IUpdateService _updateService;
         private IGameStateService _gameStateService;
 
-        private List<GameObject> _activeAbilityItems = new List<GameObject>();
-        private List<GameObject> _activeEffectItems = new List<GameObject>();
+        private readonly List<GameObject> _activeAbilityItems = new List<GameObject>();
+        private readonly List<GameObject> _activeEffectItems = new List<GameObject>();
 
         private Tower _currentTower;
 
@@ -179,22 +179,22 @@ namespace ui.selection
 
             if (_towerLevel != null)
             {
-                _towerLevel.text = $"Level {data.Level + 1}";
+                _towerLevel.text = $"Уровень {data.Level + 1}";
             }
 
             if (_towerDamage != null)
             {
-                _towerDamage.text = $"Damage: {data.Damage}";
+                _towerDamage.text = $"Урон: {data.Damage}";
             }
 
             if (_towerAttackSpeed != null)
             {
-                _towerAttackSpeed.text = $"Attack Speed: {data.AttackSpeed}";
+                _towerAttackSpeed.text = $"Скорость атаки: {data.AttackSpeed}";
             }
 
             if (_towerAttackRange != null)
             {
-                _towerAttackRange.text = $"Range: {data.AttackRange:F1}";
+                _towerAttackRange.text = $"Дальность: {data.AttackRange:F1}";
             }
 
             // Abilities
@@ -243,27 +243,27 @@ namespace ui.selection
 
             if (_enemyDamage != null)
             {
-                _enemyDamage.text = $"Damage: {data.Damage}";
+                _enemyDamage.text = $"Урон: {data.Damage}";
             }
 
             if (_enemyMoveSpeed != null)
             {
-                _enemyMoveSpeed.text = $"Speed: {enemy.CurrentMoveSpeed:F1}";
+                _enemyMoveSpeed.text = $"Скорость: {enemy.CurrentMoveSpeed:F1}";
             }
 
             if (_enemyArmor != null)
             {
-                _enemyArmor.text = $"Armor: {enemy.CurrentArmor}";
+                _enemyArmor.text = $"Броня: {enemy.CurrentArmor}";
             }
 
             if (_enemyMagicResist != null)
             {
-                _enemyMagicResist.text = $"Magic Resist: {data.MagicResist}";
+                _enemyMagicResist.text = $"Сопротивление магии: {data.MagicResist}";
             }
 
             if (_enemyEvasion != null)
             {
-                _enemyEvasion.text = $"Evasion: {data.Evasion}%";
+                _enemyEvasion.text = $"Уклонение: {data.Evasion}%";
             }
 
             UpdateEnemyEffects();
@@ -359,15 +359,15 @@ namespace ui.selection
         {
             switch (towerType)
             {
-                case TowerType.P: return "Armor Breaker (P)";
-                case TowerType.Q: return "Rapid Fire (Q)";
-                case TowerType.D: return "Heavy Hitter (D)";
-                case TowerType.G: return "Poison Tower (G)";
-                case TowerType.E: return "Support Aura (E)";
-                case TowerType.R: return "Splash Tower (R)";
-                case TowerType.B: return "Frost Tower (B)";
-                case TowerType.Y: return "Multi-Shot (Y)";
-                case TowerType.Stone: return "Stone Obstacle";
+                case TowerType.P: return "Ломатель брони (P)";
+                case TowerType.Q: return "Скорострел (Q)";
+                case TowerType.D: return "Мощный (D)";
+                case TowerType.G: return "Ядовитый (G)";
+                case TowerType.E: return "Помощник (E)";
+                case TowerType.R: return "Сплеш башня (R)";
+                case TowerType.B: return "Ледяной (B)";
+                case TowerType.Y: return "Мультивыстрел (Y)";
+                case TowerType.Stone: return "Камень";
                 default: return towerType.ToString();
             }
         }

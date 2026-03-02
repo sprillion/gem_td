@@ -16,8 +16,10 @@ namespace infrastructure.services.playerService
         event Action<int> OnLivesChanged;
 
         int GetRandomTowerLevel();
+        float[] GetTowerLevelBaseWeights();
         void AwardExperience(int xp);
         void LoseLife(int amount);
+        void AddLives(int amount);
         void AddGold(int amount);
         void LoadPlayerData(int level, int xp, int lives, int gold);
     }

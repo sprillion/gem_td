@@ -1,6 +1,6 @@
 {
   "logLevel": 3,
-  "keepServerRunning": true,
+  "keepServerRunning": false,
   "transportMethod": 2,
   "tools": [
     {
@@ -414,5 +414,5 @@
   ],
   "host": "http://localhost:56342",
   "timeoutMs": 10000,
-  "keepConnected": true
+  "keepConnected": false
 }

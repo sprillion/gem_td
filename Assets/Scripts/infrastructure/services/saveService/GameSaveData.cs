@@ -10,7 +10,7 @@ namespace infrastructure.services.saveService
         public int lastCompletedWave;
         public PlayerData playerData;
         public List<TowerSaveData> placedTowers;
-        public string saveDate;  // ISO 8601 timestamp
+        public string saveDate;
     }
 
     [System.Serializable]

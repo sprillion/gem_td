@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using level.builder;
 using towers;
 
 namespace infrastructure.services.gameStateService
@@ -10,6 +10,8 @@ namespace infrastructure.services.gameStateService
         int TowersPlacedThisRound { get; }
         event Action<GamePhase> OnPhaseChanged;
 
+        void Initialize(ILevelBuilder levelBuilder);
+        void StartGame();
         void RegisterTowerPlacement(Tower tower);
         void SelectTower(Tower selectedTower);
         bool IsPlacedThisRound(Tower tower);

@@ -4,6 +4,7 @@ using infrastructure.factories.towers;
 using infrastructure.services.gameStateService;
 using infrastructure.services.inputService;
 using infrastructure.services.pathService;
+using infrastructure.services.playerSkillService;
 using infrastructure.services.resourceProvider;
 using infrastructure.services.towerService;
 using towers;
@@ -23,6 +24,7 @@ namespace level.builder
         private readonly IPathService _pathService;
 
         private IGameStateService _gameStateService;
+        private IPlayerSkillService _playerSkillService;
 
         private MapData _mapData;
         private TowerType[,] _towerMap;
@@ -51,9 +53,10 @@ namespace level.builder
             _inputService.OnSpacePressed += Build;
         }
 
-        public void Initialize(IGameStateService gameStateService)
+        public void Initialize(IGameStateService gameStateService, IPlayerSkillService playerSkillService)
         {
             _gameStateService = gameStateService;
+            _playerSkillService = playerSkillService;
         }
 
         public void Build()
@@ -71,10 +74,9 @@ namespace level.builder
 
         public Tower CreateTower(int x, int y)
         {
-            // Prevent placement during combat/selection
+            // Only allow placement during PLACING_TOWERS phase
             if (_gameStateService != null &&
-                (_gameStateService.CurrentPhase == GamePhase.COMBAT ||
-                _gameStateService.CurrentPhase == GamePhase.SELECTING_TOWER))
+                _gameStateService.CurrentPhase != GamePhase.PLACING_TOWERS)
             {
                 Debug.Log("Cannot place towers during " + _gameStateService.CurrentPhase);
                 return null;
@@ -96,6 +98,9 @@ namespace level.builder
 
             // Register with state service if available
             _gameStateService?.RegisterTowerPlacement(tower);
+
+            // Consume any active chance boosts
+            _playerSkillService?.ConsumeChanceBoost();
 
             return tower;
         }
@@ -144,6 +149,22 @@ namespace level.builder
         public void SetTowerType(int x, int y, TowerType towerType)
         {
             _towerMap[x, y] = towerType;
+        }
+
+        public void SwapTowers(int x1, int y1, int x2, int y2)
+        {
+            var pos1 = new Vector2Int(x1, y1);
+            var pos2 = new Vector2Int(x2, y2);
+
+            _towerGameObjects.TryGetValue(pos1, out Tower tower1);
+            _towerGameObjects.TryGetValue(pos2, out Tower tower2);
+
+            // Update dictionary entries
+            if (tower1 != null) _towerGameObjects[pos2] = tower1;
+            else _towerGameObjects.Remove(pos2);
+
+            if (tower2 != null) _towerGameObjects[pos1] = tower2;
+            else _towerGameObjects.Remove(pos1);
         }
 
         private void Load()

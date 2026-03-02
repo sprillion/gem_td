@@ -21,6 +21,11 @@ namespace towers
         private readonly List<Enemy> _enemiesInside = new List<Enemy>();
         private Enemy _currentTarget;
 
+        // Player skill buffs
+        private float _rangeBuff = 0f;
+        private float _attackSpeedBuff = 0f;
+        private int _damageBuff = 0;
+
         private IUpdateService _updateService;
         private ICombatService _combatService;
         private IGameStateService _gameStateService;
@@ -35,6 +40,10 @@ namespace towers
         private ParticleSystem _highlightParticles;
 
         public List<Enemy> EnemiesInRange => _enemiesInside;
+
+        public float EffectiveAttackRange => TowerData.AttackRange + _rangeBuff;
+        public int EffectiveDamage => TowerData.Damage + _damageBuff;
+        public float AttackSpeedBuffMultiplier => 1f + _attackSpeedBuff;
 
         [Inject]
         public void Construct(IUpdateService updateService, ICombatService combatService,
@@ -96,8 +105,8 @@ namespace towers
                 return;
             }
 
-            // Get attack speed multiplier from passive/aura buffs
-            float attackSpeedMultiplier = _abilityService.GetTowerAttackSpeedMultiplier(this);
+            // Get attack speed multiplier from passive/aura buffs + player skill buffs
+            float attackSpeedMultiplier = _abilityService.GetTowerAttackSpeedMultiplier(this) * AttackSpeedBuffMultiplier;
 
             if (_combatService.CanTowerAttack(this, attackSpeedMultiplier))
             {
@@ -157,6 +166,25 @@ namespace towers
             {
                 _highlightParticles.Stop();
             }
+        }
+
+        public void AddRangeBuff(float value)
+        {
+            _rangeBuff += value;
+            if (_enemyTrigger != null)
+            {
+                _enemyTrigger.SetRadius(EffectiveAttackRange);
+            }
+        }
+
+        public void AddAttackSpeedBuff(float value)
+        {
+            _attackSpeedBuff += value;
+        }
+
+        public void AddDamageBuff(int value)
+        {
+            _damageBuff += value;
         }
 
         private void OnDestroy()
