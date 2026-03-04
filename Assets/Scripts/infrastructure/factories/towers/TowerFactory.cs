@@ -11,6 +11,7 @@ namespace infrastructure.factories.towers
     {
         private const string TowersDataPath = "ScriptableObjects/Towers/";
         private const string BasicTowerModelsPath = "Prefabs/Towers/Basic/";
+        private const string AdvancedTowerModelsPath = "Prefabs/Towers/Advanced/";
         private const string StoneModelsPath = "Prefabs/Towers/Stone";
         private const string TowerPath = "Prefabs/Towers/Tower";
         private const string TowerSettingsPath = "ScriptableObjects/Towers/TowerSettings";
@@ -21,6 +22,7 @@ namespace infrastructure.factories.towers
 
         private List<TowerData> _towersData;
         private List<TowerModel> _basicTowerModels;
+        private List<TowerModel> _advancedTowerModels;
         private TowerModel _stoneModel;
         private Tower _tower;
         private TowerSettings _towerSettings;
@@ -43,11 +45,9 @@ namespace infrastructure.factories.towers
             tower.Initialize(towerData);
             CreateTowerModel(tower);
 
-            // Add range circle drawer
             var rangeDrawer = tower.gameObject.AddComponent<RangeCircleDrawer>();
             rangeDrawer.Initialize(towerData.AttackRange);
 
-            // Add highlight effect to tower
             if (_towerHighlightPrefab != null)
             {
                 tower.SetHighlightEffect(_towerHighlightPrefab);
@@ -60,6 +60,7 @@ namespace infrastructure.factories.towers
         {
             _towersData = _resourceProvider.LoadList<TowerData>(TowersDataPath);
             _basicTowerModels = _resourceProvider.LoadList<TowerModel>(BasicTowerModelsPath);
+            _advancedTowerModels = _resourceProvider.LoadList<TowerModel>(AdvancedTowerModelsPath);
             _stoneModel = _resourceProvider.Load<TowerModel>(StoneModelsPath);
             _tower = _resourceProvider.Load<Tower>(TowerPath);
             _towerSettings = _resourceProvider.Load<TowerSettings>(TowerSettingsPath);
@@ -83,16 +84,20 @@ namespace infrastructure.factories.towers
 
             var modelPrefab = _basicTowerModels.FirstOrDefault(model => model.TowerType == tower.TowerData.TowerType);
 
+            if (modelPrefab == null && _advancedTowerModels != null)
+                modelPrefab = _advancedTowerModels.FirstOrDefault(model => model.TowerType == tower.TowerData.TowerType);
+
             if (modelPrefab == null)
             {
-                Debug.LogError($"No model prefab found for tower type: {tower.TowerData.TowerType}. Check Resources/{BasicTowerModelsPath}");
+                Debug.LogError($"No model prefab found for tower type: {tower.TowerData.TowerType}. Check Resources/{BasicTowerModelsPath} or {AdvancedTowerModelsPath}");
                 return;
             }
 
             var model = _diContainer.InstantiatePrefabForComponent<TowerModel>(modelPrefab);
             model.transform.SetParent(tower.ScaledObject);
+            model.transform.localRotation = Quaternion.identity;
 
-            if (_towerSettings != null && _towerSettings.ScaleFromLevel != null &&
+            if (tower.TowerData.TowerType.IsBasicTower() && _towerSettings != null && _towerSettings.ScaleFromLevel != null &&
                 tower.TowerData.Level < _towerSettings.ScaleFromLevel.Count)
             {
                 tower.ScaledObject.localScale = Vector3.one * _towerSettings.ScaleFromLevel[tower.TowerData.Level];
@@ -105,20 +110,17 @@ namespace infrastructure.factories.towers
 
         public void ReplaceWithStoneModel(Tower tower)
         {
-            // Destroy existing tower model
             foreach (Transform child in tower.ScaledObject)
             {
                 Object.Destroy(child.gameObject);
             }
+            
+            tower.ScaledObject.localScale = Vector3.one;
 
-            // Instantiate stone model
             var stoneModel = _diContainer.InstantiatePrefabForComponent<TowerModel>(_stoneModel);
             stoneModel.transform.SetParent(tower.ScaledObject);
             stoneModel.transform.localPosition = Vector3.zero;
             stoneModel.transform.localRotation = Quaternion.identity;
-
-            // Reset scale to normal (stone towers don't scale with level)
-            tower.ScaledObject.localScale = Vector3.one;
         }
     }
 }

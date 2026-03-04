@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e67238d4a89f46ab8ec177ab2884ce6b, type: 3}
   m_Name: EnemyData_5
   m_EditorClassIdentifier: 
-  Health: 200
-  MoveSpeed: 10
-  RotateSpeed: 10
+  Icon: {fileID: 0}
+  Health: 22
+  MoveSpeed: 500
+  RotateSpeed: 360
   Damage: 1
   Armor: 0
-  MagicResist: 0
+  MagicResist: -10
   Evasion: 0
   EnemyMoveType: 1
+  GoldReward: 5

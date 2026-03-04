@@ -14,14 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 1
   TriggerType: 0
-  Description: Slows enemy movement speed on hit
+  Description: Decreases enemy movement speed on hit
   SlowPercentByLevel:
-  - 20
-  - 30
-  - 40
-  - 50
+  - 60
+  - 90
+  - 120
+  - 150
+  - 180
   DurationByLevel:
   - 2
   - 2.5
   - 3
   - 3.5
+  - 4

@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 6
   TriggerType: 1
-  Description: Passively increases own attack speed
+  Description: Passively increases own attack speed by 200
   AttackSpeedMultiplierByLevel:
-  - 0.15
-  - 0.2
-  - 0.25
-  - 0.3
+  - 200
+  - 200
+  - 200
+  - 200
+  - 200

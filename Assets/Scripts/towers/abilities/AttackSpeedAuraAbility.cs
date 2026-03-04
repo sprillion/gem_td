@@ -6,11 +6,11 @@ namespace towers.abilities
     public class AttackSpeedAuraAbility : AbilityData
     {
         [Header("Attack Speed Aura Settings")]
-        [Tooltip("Aura radius by level (0-3)")]
-        public float[] AuraRadiusByLevel = new float[4];        // [5, 6, 7, 8]
+        [Tooltip("Aura radius by level (0-4)")]
+        public float[] AuraRadiusByLevel = new float[5];        // [5, 6, 7, 8, 9]
 
-        [Tooltip("Attack speed multiplier by level (0-3). Example: 0.1 = +10% attack speed")]
-        public float[] AttackSpeedMultiplierByLevel = new float[4]; // [0.1, 0.15, 0.2, 0.25]
+        [Tooltip("Attack speed bonus by level (0-4). Raw Dota units: 20, 30, 40, 50, 60")]
+        public float[] AttackSpeedMultiplierByLevel = new float[5]; // [20, 30, 40, 50, 60]
 
         private void OnValidate()
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using infrastructure.services.playerService;
+using infrastructure.services.playerSkillService;
 using infrastructure.services.waveService;
 using level.builder;
 using towers;
@@ -16,6 +17,7 @@ namespace infrastructure.services.saveService
         private readonly IPlayerService _playerService;
         private readonly IWaveService _waveService;
         private readonly ILevelBuilder _levelBuilder;
+        private readonly IPlayerSkillService _playerSkillService;
 
         public bool HasSaveData => PlayerPrefs.HasKey(SAVE_KEY);
 
@@ -23,11 +25,12 @@ namespace infrastructure.services.saveService
         public event Action<GameSaveData> OnGameLoaded;
 
         [Inject]
-        public SaveService(IPlayerService playerService, IWaveService waveService, ILevelBuilder levelBuilder)
+        public SaveService(IPlayerService playerService, IWaveService waveService, ILevelBuilder levelBuilder, IPlayerSkillService playerSkillService)
         {
             _playerService = playerService;
             _waveService = waveService;
             _levelBuilder = levelBuilder;
+            _playerSkillService = playerSkillService;
         }
 
         public void SaveGame()
@@ -46,6 +49,7 @@ namespace infrastructure.services.saveService
                         gold = _playerService.Gold
                     },
                     placedTowers = CollectPlacedTowers(),
+                    equippedSkills = CollectEquippedSkills(),
                     saveDate = DateTime.UtcNow.ToString("o") // ISO 8601 format
                 };
 
@@ -106,6 +110,19 @@ namespace infrastructure.services.saveService
                 PlayerPrefs.Save();
                 Debug.Log("Save data deleted");
             }
+        }
+
+        private SkillSaveData[] CollectEquippedSkills()
+        {
+            var equipped = _playerSkillService.EquippedSkills;
+            var result = new SkillSaveData[equipped.Count];
+            for (int i = 0; i < equipped.Count; i++)
+            {
+                result[i] = equipped[i] != null
+                    ? new SkillSaveData { skillType = equipped[i].Data.SkillType, upgradeLevel = equipped[i].UpgradeLevel }
+                    : new SkillSaveData { skillType = skills.PlayerSkillType.None, upgradeLevel = 0 };
+            }
+            return result;
         }
 
         private List<TowerSaveData> CollectPlacedTowers()

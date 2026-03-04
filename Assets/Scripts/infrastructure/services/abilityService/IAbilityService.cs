@@ -13,6 +13,6 @@ namespace infrastructure.services.abilityService
         void ExecuteSplashOnArrival(Tower tower, Enemy primaryTarget, List<Enemy> enemiesInRange);
         void RegisterAuraTower(Tower tower);
         void UnregisterAuraTower(Tower tower);
-        float GetTowerAttackSpeedMultiplier(Tower tower);
+        float GetTowerAttackSpeedBonus(Tower tower);
     }
 }

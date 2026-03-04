@@ -6,8 +6,8 @@ namespace towers.abilities
     public class BonusDamageAbility : AbilityData
     {
         [Header("Bonus Damage Settings")]
-        [Tooltip("Bonus damage by level (0-3)")]
-        public int[] BonusDamageByLevel = new int[4]; // [5, 10, 15, 20]
+        [Tooltip("Bonus damage by level (0-4)")]
+        public int[] BonusDamageByLevel = new int[5]; // [0, 0, 0, 20, 40]
 
         private void OnValidate()
         {

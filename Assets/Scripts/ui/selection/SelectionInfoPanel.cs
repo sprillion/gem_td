@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using enemies;
+using infrastructure.services.combinationService;
 using infrastructure.services.effectService;
 using infrastructure.services.gameStateService;
 using infrastructure.services.selectionService;
 using infrastructure.services.updateService;
+using level.builder;
 using TMPro;
 using towers;
 using UnityEngine;
@@ -32,6 +34,13 @@ namespace ui.selection
         [Header("Select Tower Button")]
         [SerializeField] private Button _selectTowerButton;
 
+        [Header("Delete Button")]
+        [SerializeField] private Button _deleteTowerButton;
+
+        [Header("Combinations")]
+        [SerializeField] private Transform _combinationsContainer;
+        [SerializeField] private GameObject _combinationButtonPrefab;
+
         [Header("Enemy Info")]
         [SerializeField] private Image _enemyIcon;
         [SerializeField] private TMP_Text _enemyName;
@@ -49,20 +58,26 @@ namespace ui.selection
         private IEffectService _effectService;
         private IUpdateService _updateService;
         private IGameStateService _gameStateService;
+        private ICombinationService _combinationService;
+        private ILevelBuilder _levelBuilder;
 
         private readonly List<GameObject> _activeAbilityItems = new List<GameObject>();
         private readonly List<GameObject> _activeEffectItems = new List<GameObject>();
+        private readonly List<GameObject> _activeCombinationButtons = new List<GameObject>();
 
         private Tower _currentTower;
 
         [Inject]
         public void Construct(ISelectionService selectionService, IEffectService effectService,
-            IUpdateService updateService, IGameStateService gameStateService)
+            IUpdateService updateService, IGameStateService gameStateService,
+            ICombinationService combinationService, ILevelBuilder levelBuilder)
         {
             _selectionService = selectionService;
             _effectService = effectService;
             _updateService = updateService;
             _gameStateService = gameStateService;
+            _combinationService = combinationService;
+            _levelBuilder = levelBuilder;
 
             _selectionService.OnTowerSelected += HandleTowerSelected;
             _selectionService.OnEnemySelected += HandleEnemySelected;
@@ -72,6 +87,11 @@ namespace ui.selection
             if (_selectTowerButton != null)
             {
                 _selectTowerButton.onClick.AddListener(OnSelectTowerClicked);
+            }
+
+            if (_deleteTowerButton != null)
+            {
+                _deleteTowerButton.onClick.AddListener(OnDeleteTowerClicked);
             }
 
             gameObject.SetActive(false);
@@ -95,6 +115,11 @@ namespace ui.selection
             {
                 _selectTowerButton.onClick.RemoveListener(OnSelectTowerClicked);
             }
+
+            if (_deleteTowerButton != null)
+            {
+                _deleteTowerButton.onClick.RemoveListener(OnDeleteTowerClicked);
+            }
         }
 
         private void OnUpdate()
@@ -111,6 +136,11 @@ namespace ui.selection
             gameObject.SetActive(true);
             _currentTower = tower;
             ShowTowerPanel(tower);
+            // Stone towers (disabled) don't participate in combinations
+            if (tower.enabled)
+                UpdateCombinationButtons(tower);
+            else
+                ClearCombinationButtons();
         }
 
         private void HandleEnemySelected(Enemy enemy)
@@ -123,6 +153,7 @@ namespace ui.selection
         private void HandleSelectionCleared()
         {
             _currentTower = null;
+            ClearCombinationButtons();
             gameObject.SetActive(false);
         }
 
@@ -138,7 +169,7 @@ namespace ui.selection
 
         private void ShowTowerPanel(Tower tower)
         {
-            if (tower == null || tower.TowerData == null) return;
+            if (tower == null) return;
 
             _towerPanel.SetActive(true);
             _enemyPanel.SetActive(false);
@@ -160,55 +191,39 @@ namespace ui.selection
 
         private void PopulateTowerInfo(Tower tower)
         {
-            var data = tower.TowerData;
+            bool isStone = !tower.enabled;
 
-            if (_towerIcon != null && data.Icon != null)
+            if (_towerIcon != null)
             {
-                _towerIcon.sprite = data.Icon;
-                _towerIcon.enabled = true;
-            }
-            else if (_towerIcon != null)
-            {
-                _towerIcon.enabled = false;
+                var icon = tower.TowerData?.Icon;
+                _towerIcon.sprite = icon;
+                _towerIcon.enabled = !isStone && icon != null;
             }
 
             if (_towerName != null)
-            {
-                _towerName.text = GetTowerDisplayName(data.TowerType);
-            }
+                _towerName.text = isStone ? "Камень" : GetTowerDisplayName(tower.TowerData.TowerType);
 
             if (_towerLevel != null)
-            {
-                _towerLevel.text = $"Уровень {data.Level + 1}";
-            }
+                _towerLevel.text = isStone ? "" : $"Уровень {tower.TowerData.Level + 1}";
 
             if (_towerDamage != null)
-            {
-                _towerDamage.text = $"Урон: {data.Damage}";
-            }
+                _towerDamage.text = isStone ? "" : $"Урон: {tower.TowerData.Damage}";
 
             if (_towerAttackSpeed != null)
-            {
-                _towerAttackSpeed.text = $"Скорость атаки: {data.AttackSpeed}";
-            }
+                _towerAttackSpeed.text = isStone ? "" : $"Скорость атаки: {tower.TowerData.AttackSpeed}";
 
             if (_towerAttackRange != null)
-            {
-                _towerAttackRange.text = $"Дальность: {data.AttackRange:F1}";
-            }
+                _towerAttackRange.text = isStone ? "" : $"Дальность: {tower.TowerData.AttackRange:F1}";
 
-            // Abilities
             ClearAbilityItems();
-            if (data.Abilities != null && data.Abilities.Count > 0)
+            if (!isStone && tower.TowerData?.Abilities != null)
             {
-                foreach (var ability in data.Abilities)
-                {
-                    CreateAbilityItem(ability, data.Level);
-                }
+                foreach (var ability in tower.TowerData.Abilities)
+                    CreateAbilityItem(ability, tower.TowerData.Level);
             }
 
-            // Select button: only visible during SELECTING_TOWER for towers placed this round
             UpdateSelectButton(tower);
+            UpdateDeleteButton();
         }
 
         private void UpdateSelectButton(Tower tower)
@@ -355,6 +370,51 @@ namespace ui.selection
             _activeEffectItems.Clear();
         }
 
+        private void OnDeleteTowerClicked()
+        {
+            if (_currentTower == null) return;
+            var tower = _currentTower;
+            // Remove from placed-this-round list if applicable (safe to call even if not in list)
+            _gameStateService.RemovePlacedThisRound(tower);
+            _selectionService.ClearSelection();
+            _levelBuilder.DeleteTower(tower);
+        }
+
+        private void UpdateDeleteButton()
+        {
+            if (_deleteTowerButton == null) return;
+            // Hide delete for newly placed towers during selection phase
+            bool isPlacedThisRound = _gameStateService.IsPlacedThisRound(_currentTower);
+            _deleteTowerButton.gameObject.SetActive(_currentTower != null && !isPlacedThisRound);
+        }
+
+        private void UpdateCombinationButtons(Tower tower)
+        {
+            ClearCombinationButtons();
+            if (_combinationService == null || _combinationButtonPrefab == null || _combinationsContainer == null)
+                return;
+
+            var available = _combinationService.GetAvailableCombinations(tower);
+            foreach (var (recipe, ingredients) in available)
+            {
+                var itemObj = Instantiate(_combinationButtonPrefab, _combinationsContainer);
+                var itemUI = itemObj.GetComponent<CombinationButtonUI>();
+                if (itemUI != null)
+                    itemUI.Setup(recipe, ingredients, tower, _combinationService);
+                _activeCombinationButtons.Add(itemObj);
+            }
+        }
+
+        private void ClearCombinationButtons()
+        {
+            foreach (var item in _activeCombinationButtons)
+            {
+                if (item != null)
+                    Destroy(item);
+            }
+            _activeCombinationButtons.Clear();
+        }
+
         private string GetTowerDisplayName(TowerType towerType)
         {
             switch (towerType)
@@ -368,6 +428,51 @@ namespace ui.selection
                 case TowerType.B: return "Ледяной (B)";
                 case TowerType.Y: return "Мультивыстрел (Y)";
                 case TowerType.Stone: return "Камень";
+                // Basic combinations
+                case TowerType.Silver: return "Серебро";
+                case TowerType.Malachite: return "Малахит";
+                case TowerType.AsteriatedRuby: return "Астерированный рубин";
+                case TowerType.Jade: return "Нефрит";
+                case TowerType.Quartz: return "Кварц";
+                // Intermediate
+                case TowerType.SilverKnight: return "Серебряный рыцарь";
+                case TowerType.PinkDiamond: return "Розовый бриллиант";
+                case TowerType.VividMalachite: return "Яркий малахит";
+                case TowerType.Uranium238: return "Уран-238";
+                case TowerType.Volcano: return "Вулкан";
+                case TowerType.Bloodstone: return "Кровавый камень";
+                case TowerType.GreyJade: return "Серый нефрит";
+                case TowerType.Gold: return "Золото";
+                case TowerType.DarkEmerald: return "Тёмный изумруд";
+                case TowerType.ParaibaTourmaline: return "Параибский турмалин";
+                case TowerType.DeepseaPearl: return "Глубоководная жемчужина";
+                case TowerType.ChrysoBerylCatsEye: return "Хризоберилл-кошачий глаз";
+                case TowerType.YellowSaphire: return "Жёлтый сапфир";
+                case TowerType.MonkeyKingJade: return "Нефрит царя обезьян";
+                case TowerType.EgyptGold: return "Египетское золото";
+                case TowerType.LuckyChinese: return "Китайская удача";
+                case TowerType.CharmingLazurite: return "Чарующий лазурит";
+                case TowerType.NorthernSabersEye: return "Глаз северной сабли";
+                // Advanced
+                case TowerType.HugePinkDiamond: return "Огромный розовый бриллиант";
+                case TowerType.Uranium235: return "Уран-235";
+                case TowerType.AntiqueBloodstone: return "Античный кровавый камень";
+                case TowerType.EmeraldGolem: return "Изумрудный голем";
+                case TowerType.ElaboratelyCarvedTourmaline: return "Резной турмалин";
+                case TowerType.RedCoral: return "Красный коралл";
+                case TowerType.DiamondCullinan: return "Алмаз Куллинан";
+                // Top
+                case TowerType.KohINoorDiamond: return "Кохинур";
+                case TowerType.DepletedKyparium: return "Обеднённый кипарий";
+                case TowerType.TheCrownPrince: return "Принц-наследник";
+                case TowerType.GoldenJubilee: return "Золотой юбилей";
+                case TowerType.CarmenLucia: return "Кармен Лусия";
+                case TowerType.StarSapphire: return "Звёздный сапфир";
+                case TowerType.SapphireStarOfAdam: return "Сапфировая звезда Адама";
+                // Secret
+                case TowerType.Agate: return "Агат";
+                case TowerType.Obsidian: return "Обсидиан";
+                case TowerType.FantasticMissShrimp: return "Фантастическая мисс Креветка";
                 default: return towerType.ToString();
             }
         }

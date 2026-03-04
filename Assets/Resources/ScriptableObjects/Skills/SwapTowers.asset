@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: SwapTowers
   m_EditorClassIdentifier: 
   SkillType: 1
-  SkillName: Swap Towers
-  Icon: {fileID: 0}
-  Description: Swap positions of two towers on the map
+  SkillName: "\u041F\u043E\u043C\u0435\u043D\u044F\u0442\u044C \u0411\u0430\u0448\u043D\u0438"
+  Icon: {fileID: 31460093, guid: a10b0ea52ea673743b3f6d1d4fa0ad55, type: 3}
+  Description: "\u041C\u0435\u043D\u044F\u0435\u0442 \u043C\u0435\u0441\u0442\u0430\u043C\u0438
+    \u0434\u0432\u0435 \u0431\u0430\u0448\u043D\u0438 \u043D\u0430 \u043A\u0430\u0440\u0442\u0435"
   TargetMode: 2
-  AvailableInPhases: 0000000002000000
+  AvailableInPhases: 010000000200000003000000
   GoldCostByLevel: 32000000280000001e00000014000000
   CooldownByLevel:
   - 30

@@ -1,6 +1,8 @@
-﻿using infrastructure.services.gameStateService;
+﻿using System.Collections.Generic;
+using infrastructure.services.gameStateService;
 using infrastructure.services.playerSkillService;
 using towers;
+using UnityEngine;
 
 namespace level.builder
 {
@@ -15,5 +17,9 @@ namespace level.builder
         Tower GetTowerAtPosition(int x, int y);
         void RestoreTower(TowerType towerType, int level, int x, int y);
         void SwapTowers(int x1, int y1, int x2, int y2);
+        Vector2Int GetTowerGridPosition(Tower tower);
+        Tower CreateCombinedTower(Tower sourceTower, TowerType type, int level);
+        IReadOnlyList<Tower> GetAllTowers();
+        void DeleteTower(Tower tower);
     }
 }

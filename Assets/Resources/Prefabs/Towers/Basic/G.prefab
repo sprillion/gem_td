@@ -13,6 +13,11 @@ PrefabInstance:
       propertyPath: _towerType
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 1584082743971758079, guid: 12990f575642a934990494dfca537ea3,
+        type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3724552591487869328, guid: 12990f575642a934990494dfca537ea3,
         type: 3}
       propertyPath: m_IsActive

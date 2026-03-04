@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using infrastructure.factories.blocks;
 using infrastructure.factories.towers;
 using infrastructure.services.gameStateService;
@@ -167,6 +168,68 @@ namespace level.builder
             else _towerGameObjects.Remove(pos1);
         }
 
+        public Vector2Int GetTowerGridPosition(Tower tower)
+        {
+            foreach (var kvp in _towerGameObjects)
+            {
+                if (kvp.Value == tower)
+                    return kvp.Key;
+            }
+            Debug.LogWarning("GetTowerGridPosition: tower not found in map");
+            return new Vector2Int(-1, -1);
+        }
+
+        public Tower CreateCombinedTower(Tower sourceTower, TowerType type, int level)
+        {
+            var pos = GetTowerGridPosition(sourceTower);
+            if (pos.x < 0 || pos.y < 0)
+            {
+                Debug.LogError("CreateCombinedTower: source tower position not found");
+                return null;
+            }
+
+            int x = pos.x;
+            int y = pos.y;
+
+            // Destroy source tower
+            _towerGameObjects.Remove(pos);
+            UnityEngine.Object.Destroy(sourceTower.gameObject);
+
+            // Create new combined tower
+            var tower = _towerFactory.CreateTower(type, level);
+            tower.transform.position = new Vector3(x, 0, -y) * MapData.BlockSize;
+
+            _towerMap[x, y] = type;
+            _towerGameObjects[pos] = tower;
+
+            Debug.Log($"CreateCombinedTower: created {type} (L{level}) at ({x},{y})");
+            return tower;
+        }
+
+        public IReadOnlyList<Tower> GetAllTowers()
+        {
+            return _towerGameObjects.Values.Where(t => t != null).ToList();
+        }
+
+        public void DeleteTower(Tower tower)
+        {
+            var pos = GetTowerGridPosition(tower);
+            if (pos.x < 0 || pos.y < 0)
+            {
+                Debug.LogWarning("DeleteTower: tower not found in map");
+                return;
+            }
+
+            _towerGameObjects.Remove(pos);
+            _towerMap[pos.x, pos.y] = TowerType.None;
+            UnityEngine.Object.Destroy(tower.gameObject);
+
+            // Refresh path after deletion
+            _pathService.FindPath(_mapData, _towerMap);
+
+            Debug.Log($"Tower deleted at ({pos.x}, {pos.y})");
+        }
+
         private void Load()
         {
             _mapData = _resourceProvider.Load<MapData>(MapPath);
@@ -188,6 +251,9 @@ namespace level.builder
 
         private bool CanSetOnBlock(int x, int y)
         {
+            if (_towerMap[x, y] != TowerType.None)
+                return false;
+
             switch (MapData.BlocksMap[x, y])
             {
                 case BlockType.Dark:

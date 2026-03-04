@@ -37,8 +37,12 @@ namespace enemies
         public EnemyData EnemyData => _enemyData;
         public int GoldReward => _enemyData != null ? _enemyData.GoldReward : 0;
 
+        // Dota 2-style speed values are stored in assets (e.g. 300 = normal, 522 = fast).
+        // Divide by this factor to convert to Unity units/sec on a 11x11, BlockSize=2 map.
+        private const float DotaSpeedToUnity = 100f;
+
         // Computed properties with modifiers
-        public float CurrentMoveSpeed => _enemyData.MoveSpeed * _moveSpeedModifier;
+        public float CurrentMoveSpeed => _enemyData.MoveSpeed * _moveSpeedModifier / DotaSpeedToUnity;
         public int CurrentArmor => _enemyData.Armor + _armorModifier;
 
         public event Action<Enemy> OnDeath;

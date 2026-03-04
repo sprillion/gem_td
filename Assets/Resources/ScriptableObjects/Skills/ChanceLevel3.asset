@@ -13,11 +13,13 @@ MonoBehaviour:
   m_Name: ChanceLevel3
   m_EditorClassIdentifier: 
   SkillType: 32
-  SkillName: Chance Level 3
-  Icon: {fileID: 0}
-  Description: Increase chance of next tower being level 3
+  SkillName: "\u0428\u0430\u043D\u0441 \u0423\u0440\u043E\u0432\u043D\u044F 3"
+  Icon: {fileID: -1089856795, guid: a10b0ea52ea673743b3f6d1d4fa0ad55, type: 3}
+  Description: "\u0423\u0432\u0435\u043B\u0438\u0447\u0438\u0432\u0430\u0435\u0442
+    \u0448\u0430\u043D\u0441 \u043F\u043E\u044F\u0432\u043B\u0435\u043D\u0438\u044F
+    \u0431\u0430\u0448\u043D\u0438 3-\u0433\u043E \u0443\u0440\u043E\u0432\u043D\u044F"
   TargetMode: 0
-  AvailableInPhases: 00000000
+  AvailableInPhases: 01000000
   GoldCostByLevel: 4b0000003c0000002d0000001e000000
   CooldownByLevel:
   - 10

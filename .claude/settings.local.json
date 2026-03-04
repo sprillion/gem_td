@@ -27,7 +27,12 @@
       "Bash(bash:*)",
       "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\serge\\\\.claude\\\\projects\\\\C--UnityProjects-gem-td\\\\f2164375-c552-40a8-941e-954cf0a79f07\\\\tool-results\\\\toolu_01W8SRksgDkXER3ksgYTv2ks.txt'' | Select-String -Pattern ''Created:|Prefabs created|Error|Exception'' -AllMatches\")",
       "Bash(powershell -Command:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:gem-td.com)",
+      "WebFetch(domain:api.gem-td.com)",
+      "Bash(cat:*)",
+      "Bash(/tmp/verify_final.json:*)",
+      "Bash(do grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

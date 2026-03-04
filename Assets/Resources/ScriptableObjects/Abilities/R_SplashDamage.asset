@@ -14,14 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 7
   TriggerType: 3
-  Description: Damages enemies near the primary target
+  Description: Deals cleave damage to nearby enemies
   SplashRadiusByLevel:
-  - 3
-  - 3.5
-  - 4
-  - 4.5
+  - 300
+  - 350
+  - 400
+  - 450
+  - 500
   SplashDamagePercentByLevel:
+  - 30
+  - 40
   - 50
   - 60
   - 70
-  - 80

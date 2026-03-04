@@ -31,15 +31,12 @@ namespace infrastructure.services.effectService
             if (!_activeEffects.ContainsKey(enemy))
             {
                 _activeEffects[enemy] = new List<Effect>();
-                // Subscribe to enemy death to clean up effects
                 enemy.OnDeath += ClearEffects;
             }
 
-            // Check for duplicate effect type - refresh duration instead of stacking
             var existingEffect = _activeEffects[enemy].FirstOrDefault(e => e.GetType() == effect.GetType());
             if (existingEffect != null)
             {
-                // Refresh duration by removing old and applying new
                 existingEffect.Remove(enemy);
                 _activeEffects[enemy].Remove(existingEffect);
                 Debug.Log($"Refreshed effect {effect.GetType().Name} on {enemy.name}");
@@ -109,7 +106,6 @@ namespace infrastructure.services.effectService
                 {
                     effect.Update(Time.deltaTime);
 
-                    // Handle poison damage ticks
                     if (effect is PoisonEffect poisonEffect)
                     {
                         if (poisonEffect.ShouldDealDamage(Time.deltaTime))
@@ -126,7 +122,6 @@ namespace infrastructure.services.effectService
                 }
             }
 
-            // Clean up expired effects
             foreach (var (enemy, effect) in effectsToRemove)
             {
                 effect.Remove(enemy);
@@ -138,7 +133,6 @@ namespace infrastructure.services.effectService
                 }
             }
 
-            // Clean up dead enemies
             foreach (var enemy in enemiesToRemove)
             {
                 _activeEffects.Remove(enemy);

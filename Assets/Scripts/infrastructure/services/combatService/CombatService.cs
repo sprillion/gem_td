@@ -9,12 +9,14 @@ namespace infrastructure.services.combatService
     {
         private Dictionary<Tower, float> _lastAttackTime = new Dictionary<Tower, float>();
 
-        public bool CanTowerAttack(Tower tower, float attackSpeedMultiplier = 1f)
+        public bool CanTowerAttack(Tower tower, float attackSpeedBonus = 0f)
         {
             if (tower.TowerData == null) return false;
 
-            float effectiveAttackSpeed = tower.TowerData.AttackSpeed * attackSpeedMultiplier;
-            float cooldown = 1f / effectiveAttackSpeed;
+            // Dota 2 formula: cooldown = BAT * 100 / totalAS = 170 / totalAS
+            // where 170 = Base Attack Time (1.7) * 100
+            float totalAttackSpeed = tower.TowerData.AttackSpeed + attackSpeedBonus;
+            float cooldown = 170f / totalAttackSpeed;
 
             if (!_lastAttackTime.ContainsKey(tower))
             {

@@ -6,8 +6,8 @@ namespace towers.abilities
     public class MultiTargetAbility : AbilityData
     {
         [Header("Multi-Target Settings")]
-        [Tooltip("Additional targets by level (0-3). Example: 1 = hits 2 enemies total")]
-        public int[] AdditionalTargetsByLevel = new int[4]; // [1, 2, 3, 4]
+        [Tooltip("Additional targets by level (0-4). Example: 2 = hits 3 enemies total")]
+        public int[] AdditionalTargetsByLevel = new int[5]; // [2, 2, 2, 2, 2]
 
         private void OnValidate()
         {

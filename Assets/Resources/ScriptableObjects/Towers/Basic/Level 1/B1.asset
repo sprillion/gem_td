@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a628ad9654a1462e9fb2805388680746, type: 3}
   m_Name: B1
   m_EditorClassIdentifier: 
+  Icon: {fileID: 771220807, guid: 3663fcdd2b559d44bac1ab1c0841e273, type: 3}
   TowerType: 8
   Level: 0
-  Damage: 1
-  AttackSpeed: 4
-  AttackRange: 10
+  Damage: 2
+  AttackSpeed: 170
+  AttackRange: 8
   Abilities:
   - {fileID: 11400000, guid: cce3e6fac68898247aafe3fd6078275d, type: 2}

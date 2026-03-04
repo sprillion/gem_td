@@ -43,7 +43,7 @@ namespace towers
 
         public float EffectiveAttackRange => TowerData.AttackRange + _rangeBuff;
         public int EffectiveDamage => TowerData.Damage + _damageBuff;
-        public float AttackSpeedBuffMultiplier => 1f + _attackSpeedBuff;
+        public float AttackSpeedBuff => _attackSpeedBuff;
 
         [Inject]
         public void Construct(IUpdateService updateService, ICombatService combatService,
@@ -91,7 +91,6 @@ namespace towers
 
         public void OnClick()
         {
-            // Always use SelectionService to open info panel
             _selectionService?.SelectTower(this);
         }
 
@@ -105,10 +104,10 @@ namespace towers
                 return;
             }
 
-            // Get attack speed multiplier from passive/aura buffs + player skill buffs
-            float attackSpeedMultiplier = _abilityService.GetTowerAttackSpeedMultiplier(this) * AttackSpeedBuffMultiplier;
+            // Dota 2-style: sum all additive AS bonuses, then apply formula 170 / (baseAS + bonus)
+            float attackSpeedBonus = _abilityService.GetTowerAttackSpeedBonus(this) + AttackSpeedBuff;
 
-            if (_combatService.CanTowerAttack(this, attackSpeedMultiplier))
+            if (_combatService.CanTowerAttack(this, attackSpeedBonus))
             {
                 _combatService.RegisterAttack(this);
 

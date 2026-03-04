@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a628ad9654a1462e9fb2805388680746, type: 3}
   m_Name: G1
   m_EditorClassIdentifier: 
+  Icon: {fileID: -345608559, guid: 3663fcdd2b559d44bac1ab1c0841e273, type: 3}
   TowerType: 5
   Level: 4
-  Damage: 1
-  AttackSpeed: 4
-  AttackRange: 10
+  Damage: 10
+  AttackSpeed: 170
+  AttackRange: 7.5
   Abilities:
   - {fileID: 11400000, guid: 05329e635f4ea9a4caab54e917188d8b, type: 2}

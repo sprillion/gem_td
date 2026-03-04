@@ -6,8 +6,8 @@ namespace towers.abilities
     public class IncreasedAttackSpeedAbility : AbilityData
     {
         [Header("Increased Attack Speed Settings")]
-        [Tooltip("Attack speed multiplier by level (0-3). Example: 0.15 = +15% attack speed")]
-        public float[] AttackSpeedMultiplierByLevel = new float[4]; // [0.15, 0.2, 0.25, 0.3]
+        [Tooltip("Attack speed bonus by level (0-4). Raw Dota units: 200 = +200 AS passive")]
+        public float[] AttackSpeedMultiplierByLevel = new float[5]; // [200, 200, 200, 200, 200]
 
         private void OnValidate()
         {

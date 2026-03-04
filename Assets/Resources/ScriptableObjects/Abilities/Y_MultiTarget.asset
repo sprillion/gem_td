@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 8
   TriggerType: 3
-  Description: Attacks multiple enemies simultaneously
-  AdditionalTargetsByLevel: 01000000020000000300000004000000
+  Description: Attacks up to 3 enemies simultaneously
+  AdditionalTargetsByLevel: 0200000002000000020000000200000002000000

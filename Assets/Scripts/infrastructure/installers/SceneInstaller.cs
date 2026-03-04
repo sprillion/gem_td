@@ -2,6 +2,7 @@
 using infrastructure.factories.enemies;
 using infrastructure.factories.towers;
 using infrastructure.services.abilityService;
+using infrastructure.services.combinationService;
 using infrastructure.services.combatService;
 using infrastructure.services.effectService;
 using infrastructure.services.gameStateService;
@@ -65,6 +66,9 @@ namespace infrastructure.installers
 
             // Bind GameStateService (depends on IPathService, IWaveService, ILevelBuilder)
             BindGameStateService();
+
+            // Bind CombinationService (depends on ILevelBuilder, IGameStateService, ITowerFactory, ISelectionService)
+            BindCombinationService();
 
             // Bind PathDrawer (depends on IPathService, IInputService)
             BindPathDrawer();
@@ -154,9 +158,27 @@ namespace infrastructure.installers
                     }
                 }
 
-                // Save game found: auto-equip first 4 skills and skip skill selection
-                for (int i = 0; i < UnityEngine.Mathf.Min(4, allSkills.Length); i++)
-                    skillService.EquipSkill(i, allSkills[i], 0);
+                // Restore equipped skills from save data
+                if (saveData.equippedSkills != null && saveData.equippedSkills.Length > 0)
+                {
+                    var skillDict = new System.Collections.Generic.Dictionary<skills.PlayerSkillType, skills.PlayerSkillData>();
+                    foreach (var skill in allSkills)
+                        skillDict[skill.SkillType] = skill;
+
+                    for (int i = 0; i < saveData.equippedSkills.Length; i++)
+                    {
+                        var savedSkill = saveData.equippedSkills[i];
+                        if (savedSkill.skillType != skills.PlayerSkillType.None &&
+                            skillDict.TryGetValue(savedSkill.skillType, out var skillData))
+                            skillService.EquipSkill(i, skillData, savedSkill.upgradeLevel);
+                    }
+                }
+                else
+                {
+                    // Fallback for old saves without skill data
+                    for (int i = 0; i < UnityEngine.Mathf.Min(4, allSkills.Length); i++)
+                        skillService.EquipSkill(i, allSkills[i], 0);
+                }
                 gameStateService.StartGame();
             }
             else
@@ -271,6 +293,11 @@ namespace infrastructure.installers
         private void BindRangeCircleManager()
         {
             Container.BindInterfacesTo<RangeCircleManager>().AsSingle().NonLazy();
+        }
+
+        private void BindCombinationService()
+        {
+            Container.Bind<ICombinationService>().To<CombinationService>().AsSingle();
         }
     }
 }

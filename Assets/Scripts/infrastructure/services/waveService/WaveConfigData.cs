@@ -9,6 +9,5 @@ namespace infrastructure.services.waveService
         public int WaveNumber;
         public int EnemyCount;
         public float SpawnInterval;
-        // EnemyData is now loaded dynamically by wave number in WaveService
     }
 }

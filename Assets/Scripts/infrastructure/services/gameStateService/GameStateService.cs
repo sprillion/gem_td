@@ -32,7 +32,6 @@ namespace infrastructure.services.gameStateService
             _waveService = waveService;
             _towerFactory = towerFactory;
 
-            // Subscribe to wave completion
             _waveService.OnWaveComplete += OnWaveComplete;
         }
 
@@ -77,10 +76,8 @@ namespace infrastructure.services.gameStateService
 
             Debug.Log("Tower selected, converting others to stone");
 
-            // Disable highlights first
             DisableTowerHighlights();
 
-            // Convert all non-selected towers to stone
             foreach (var tower in _placedTowersThisRound)
             {
                 if (tower != selectedTower)
@@ -89,14 +86,13 @@ namespace infrastructure.services.gameStateService
                 }
             }
 
-            // Clear the list for next round
             _placedTowersThisRound.Clear();
 
             // Start the wave
             StartWave();
         }
 
-        private void ConvertTowerToStone(Tower tower)
+        public void ConvertTowerToStone(Tower tower)
         {
             if (_levelBuilder == null)
             {
@@ -104,25 +100,20 @@ namespace infrastructure.services.gameStateService
                 return;
             }
 
-            // Get grid position from world position
             Vector3 worldPos = tower.transform.position;
             int x = Mathf.RoundToInt(worldPos.x / _levelBuilder.MapData.BlockSize);
             int y = Mathf.RoundToInt(-worldPos.z / _levelBuilder.MapData.BlockSize);
 
-            // Update tower map
             _levelBuilder.SetTowerType(x, y, TowerType.Stone);
 
-            // Disable tower combat functionality
             var enemyTrigger = tower.GetComponent<EnemyTrigger>();
             if (enemyTrigger != null)
             {
                 GameObject.Destroy(enemyTrigger);
             }
 
-            // Disable tower script
             tower.enabled = false;
 
-            // Replace visual model with stone model
             _towerFactory.ReplaceWithStoneModel(tower);
 
             Debug.Log($"Tower at ({x}, {y}) converted to stone");
@@ -131,6 +122,36 @@ namespace infrastructure.services.gameStateService
         public bool IsPlacedThisRound(Tower tower)
         {
             return _placedTowersThisRound.Contains(tower);
+        }
+
+        public void RemovePlacedThisRound(Tower tower)
+        {
+            _placedTowersThisRound.Remove(tower);
+        }
+
+        public IReadOnlyList<Tower> GetPlacedThisRound()
+        {
+            return _placedTowersThisRound;
+        }
+
+        public void SelectCombinedTower(Tower combinedTower)
+        {
+            if (_currentPhase != GamePhase.SELECTING_TOWER)
+            {
+                Debug.LogWarning("SelectCombinedTower called outside SELECTING_TOWER phase");
+                return;
+            }
+
+            DisableTowerHighlights();
+            
+            foreach (var tower in _placedTowersThisRound)
+            {
+                if (tower != null)
+                    ConvertTowerToStone(tower);
+            }
+            _placedTowersThisRound.Clear();
+
+            StartWave();
         }
 
         public void StartWave()

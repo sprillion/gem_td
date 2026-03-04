@@ -12,6 +12,56 @@
         R,
         B,
         Y,
+
+        // Basic combinations
+        Silver,
+        Malachite,
+        AsteriatedRuby,
+        Jade,
+        Quartz,
+
+        // Intermediate combinations
+        SilverKnight,
+        PinkDiamond,
+        VividMalachite,
+        Uranium238,
+        Volcano,
+        Bloodstone,
+        GreyJade,
+        Gold,
+        DarkEmerald,
+        ParaibaTourmaline,
+        DeepseaPearl,
+        ChrysoBerylCatsEye,
+        YellowSaphire,
+        MonkeyKingJade,
+        EgyptGold,
+        LuckyChinese,
+        CharmingLazurite,
+        NorthernSabersEye,
+
+        // Advanced combinations (3 combined towers)
+        HugePinkDiamond,
+        Uranium235,
+        AntiqueBloodstone,
+        EmeraldGolem,
+        ElaboratelyCarvedTourmaline,
+        RedCoral,
+        DiamondCullinan,
+
+        // Top
+        KohINoorDiamond,
+        DepletedKyparium,
+        TheCrownPrince,
+        GoldenJubilee,
+        CarmenLucia,
+        StarSapphire,
+        SapphireStarOfAdam,
+
+        // Secret
+        Agate,
+        Obsidian,
+        FantasticMissShrimp,
     }
     // public enum TowerType
     // {

@@ -13,11 +13,13 @@ MonoBehaviour:
   m_Name: ChanceY
   m_EditorClassIdentifier: 
   SkillType: 27
-  SkillName: Chance Y
-  Icon: {fileID: 0}
-  Description: Increase chance of next tower being type Y
+  SkillName: "\u0428\u0430\u043D\u0441 Y"
+  Icon: {fileID: -375735170, guid: a10b0ea52ea673743b3f6d1d4fa0ad55, type: 3}
+  Description: "\u0423\u0432\u0435\u043B\u0438\u0447\u0438\u0432\u0430\u0435\u0442
+    \u0448\u0430\u043D\u0441 \u043F\u043E\u044F\u0432\u043B\u0435\u043D\u0438\u044F
+    \u0431\u0430\u0448\u043D\u0438 \u0442\u0438\u043F\u0430 Y"
   TargetMode: 0
-  AvailableInPhases: 00000000
+  AvailableInPhases: 01000000
   GoldCostByLevel: 140000000f0000000a00000005000000
   CooldownByLevel:
   - 10

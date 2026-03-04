@@ -312,42 +312,43 @@ namespace infrastructure.services.abilityService
             }
         }
 
-        public float GetTowerAttackSpeedMultiplier(Tower tower)
+        public float GetTowerAttackSpeedBonus(Tower tower)
         {
             if (tower?.TowerData?.Abilities == null)
-                return 1f;
+                return 0f;
 
-            float multiplier = 1f;
-            int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 3);
+            // Dota 2-style: bonuses are additive raw attack speed points
+            float bonus = 0f;
+            int towerLevel = Mathf.Clamp(tower.TowerData.Level, 0, 4);
 
-            // Check for passive attack speed buff (Q tower)
+            // Passive attack speed (Q tower): +200 AS added to base
             foreach (var ability in tower.TowerData.Abilities)
             {
                 if (ability is IncreasedAttackSpeedAbility passiveAbility)
                 {
-                    multiplier += passiveAbility.AttackSpeedMultiplierByLevel[towerLevel];
+                    bonus += passiveAbility.AttackSpeedMultiplierByLevel[towerLevel];
                 }
             }
 
-            // Check for aura buffs from other towers
+            // Aura buffs from E towers: +20/30/40/50/60 AS added to base
             if (_auraBuffCache.ContainsKey(tower))
             {
                 foreach (var auraTower in _auraBuffCache[tower])
                 {
                     if (auraTower == null || !auraTower.enabled) continue;
 
-                    int auraLevel = Mathf.Clamp(auraTower.TowerData.Level, 0, 3);
+                    int auraLevel = Mathf.Clamp(auraTower.TowerData.Level, 0, 4);
                     foreach (var ability in auraTower.TowerData.Abilities)
                     {
                         if (ability is AttackSpeedAuraAbility auraAbility)
                         {
-                            multiplier += auraAbility.AttackSpeedMultiplierByLevel[auraLevel];
+                            bonus += auraAbility.AttackSpeedMultiplierByLevel[auraLevel];
                         }
                     }
                 }
             }
 
-            return multiplier;
+            return bonus;
         }
 
         private void ProcessAuras()

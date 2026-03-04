@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using level.builder;
 using towers;
 
@@ -17,5 +18,11 @@ namespace infrastructure.services.gameStateService
         bool IsPlacedThisRound(Tower tower);
         void StartWave();
         void EndWave();
+
+        // Combination support
+        void ConvertTowerToStone(Tower tower);
+        void SelectCombinedTower(Tower combinedTower);
+        void RemovePlacedThisRound(Tower tower);
+        IReadOnlyList<Tower> GetPlacedThisRound();
     }
 }

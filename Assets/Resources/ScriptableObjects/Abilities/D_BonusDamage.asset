@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 2
   TriggerType: 3
-  Description: Deals bonus damage on attack
-  BonusDamageByLevel: 050000000a0000000f00000014000000
+  Description: Deals bonus attack damage (activates from level 4)
+  BonusDamageByLevel: 0000000000000000000000001400000028000000

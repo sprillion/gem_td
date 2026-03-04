@@ -172,7 +172,7 @@ namespace infrastructure.services.waveService
         private WaveConfigData LoadWaveConfig(int waveNumber)
         {
             // Try to load specific wave configuration
-            string path = $"ScriptableObjects/Waves/Wave_{waveNumber}";
+            string path = $"ScriptableObjects/Waves/Wave {waveNumber}";
             WaveConfigData config = _resourceProvider.Load<WaveConfigData>(path);
 
             return config;

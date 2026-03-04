@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using skills;
 using towers;
 
 namespace infrastructure.services.saveService
@@ -10,7 +11,15 @@ namespace infrastructure.services.saveService
         public int lastCompletedWave;
         public PlayerData playerData;
         public List<TowerSaveData> placedTowers;
+        public SkillSaveData[] equippedSkills;
         public string saveDate;
+    }
+
+    [System.Serializable]
+    public class SkillSaveData
+    {
+        public PlayerSkillType skillType;
+        public int upgradeLevel;
     }
 
     [System.Serializable]

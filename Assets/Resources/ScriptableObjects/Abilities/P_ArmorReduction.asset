@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 5
   TriggerType: 0
-  Description: Reduces enemy armor temporarily
-  ArmorReductionByLevel: 050000000a0000000f00000014000000
+  Description: Decreases enemy armor on hit
+  ArmorReductionByLevel: 0200000004000000080000001000000020000000
   DurationByLevel:
   - 3
   - 3.5
   - 4
   - 4.5
+  - 5

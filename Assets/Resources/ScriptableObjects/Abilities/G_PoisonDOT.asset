@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityType: 4
   TriggerType: 0
-  Description: Applies poison damage over time
-  DamagePerTickByLevel: 01000000020000000300000005000000
+  Description: Applies poison damage over time for 5 seconds
+  DamagePerTickByLevel: 0100000002000000040000000800000010000000
   TickIntervalByLevel:
   - 0.5
   - 0.5
   - 0.5
   - 0.5
+  - 0.5
   DurationByLevel:
-  - 3
-  - 4
   - 5
-  - 6
+  - 5
+  - 5
+  - 5
+  - 5

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: IncreaseDamage
   m_EditorClassIdentifier: 
   SkillType: 12
-  SkillName: Increase Damage
-  Icon: {fileID: 0}
-  Description: Temporarily increase a tower's damage
+  SkillName: "\u0423\u0432\u0435\u043B\u0438\u0447\u0438\u0442\u044C \u0423\u0440\u043E\u043D"
+  Icon: {fileID: -2093579263, guid: a10b0ea52ea673743b3f6d1d4fa0ad55, type: 3}
+  Description: "\u0412\u0440\u0435\u043C\u0435\u043D\u043D\u043E \u0443\u0432\u0435\u043B\u0438\u0447\u0438\u0432\u0430\u0435\u0442
+    \u0443\u0440\u043E\u043D \u0431\u0430\u0448\u043D\u0438"
   TargetMode: 1
-  AvailableInPhases: 02000000
+  AvailableInPhases: 010000000200000003000000
   GoldCostByLevel: 1e00000019000000140000000f000000
   CooldownByLevel:
   - 20
